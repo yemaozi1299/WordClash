@@ -4,7 +4,9 @@
       "WebFetch(domain:github.com)",
       "Bash(git clone *)",
       "Bash(npm create *)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(ls -la \"$HOME/.claude/skills/\" 2>/dev/null | head -30)",
+      "Read(//c/Users/a1299/.claude/**)"
     ]
   }
 }
