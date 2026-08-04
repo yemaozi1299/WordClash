@@ -46,3 +46,24 @@ export function exportToFile(data) {
   a.click()
   URL.revokeObjectURL(url)
 }
+
+// ========== 文章阅读持久化 ==========
+
+export function loadArticles() {
+  try {
+    const raw = localStorage.getItem('wordclash-articles')
+    if (!raw) return []
+    return JSON.parse(raw)
+  } catch {
+    return []
+  }
+}
+
+export function saveArticles(articles) {
+  try {
+    localStorage.setItem('wordclash-articles', JSON.stringify(articles))
+  } catch (e) {
+    // 配额溢出（QuotaExceededError）不应中断解析流程：内存仍更新，仅持久化失败
+    console.warn('文章持久化失败（localStorage 可能已满）:', e)
+  }
+}

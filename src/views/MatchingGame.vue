@@ -59,7 +59,7 @@ async function handleEndSession() {
       overallAssessment: `本次游戏完成。共 ${history.length} 次匹配，正确 ${history.filter(h => h.result === 'correct').length} 次。`,
       masteredWords: [],
       weakWords: history.filter(h => h.result === 'wrong').map(h => h.word),
-      reviewSuggestions: '请配置 DeepSeek API Key 以获取 AI 详细分析',
+      reviewSuggestions: '确认 API Key 已正确配置后可获取 AI 详细分析',
       score: Math.round(history.filter(h => h.result === 'correct').length / history.length * 100)
     }
   } finally {

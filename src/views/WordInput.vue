@@ -1,7 +1,7 @@
 <script setup>
 import { ref, nextTick } from 'vue'
 import { useWordsStore } from '@/stores/words.js'
-import { parseWord, hasApiKey, setApiKey, getApiKey } from '@/services/deepseek.js'
+import { parseWord } from '@/services/deepseek.js'
 
 const wordsStore = useWordsStore()
 const inputText = ref('')
@@ -9,13 +9,6 @@ const inputEl = ref(null)
 const parsing = ref(false)
 const parseError = ref(null)
 const lastAdded = ref(null)
-const showKeyInput = ref(!hasApiKey())
-const keyInput = ref(getApiKey())
-
-function saveKey() {
-  setApiKey(keyInput.value.trim())
-  showKeyInput.value = false
-}
 
 async function submitWord() {
   const word = inputText.value.trim()
@@ -36,8 +29,7 @@ async function submitWord() {
     inputText.value = ''
   } catch (e) {
     if (e.message === 'API_KEY_MISSING') {
-      showKeyInput.value = true
-      parseError.value = '请先配置 DeepSeek API Key'
+      parseError.value = '未配置 API Key，请在 .env 中设置 VITE_DEEPSEEK_API_KEY'
     } else {
       parseError.value = `解析失败: ${e.message}`
     }
@@ -59,21 +51,6 @@ wordsStore.init()
   <div class="page">
     <h1 class="page-title">单词录入</h1>
     <p class="page-desc">输入英文单词，回车即可由 AI 自动解析并保存</p>
-
-    <div v-if="showKeyInput" class="key-setup">
-      <label>DeepSeek API Key</label>
-      <div class="key-row">
-        <input
-          v-model="keyInput"
-          type="password"
-          placeholder="sk-..."
-          class="key-field"
-          @keyup.enter="saveKey"
-        />
-        <button class="btn btn-primary" @click="saveKey">保存</button>
-      </div>
-      <p class="hint">Key 仅保存在本地浏览器中，不会上传</p>
-    </div>
 
     <div class="input-area">
       <input
@@ -114,7 +91,7 @@ wordsStore.init()
       </div>
     </div>
 
-    <div v-if="wordsStore.wordCount === 0 && !showKeyInput" class="empty-state">
+    <div v-if="wordsStore.wordCount === 0" class="empty-state">
       还没有单词，开始录入吧
     </div>
   </div>
@@ -131,40 +108,6 @@ wordsStore.init()
   color: var(--color-text-secondary);
   font-size: 14px;
   margin-bottom: 28px;
-}
-
-.key-setup {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  padding: 20px;
-  margin-bottom: 24px;
-}
-
-.key-setup label {
-  display: block;
-  font-weight: 500;
-  margin-bottom: 8px;
-  font-size: 14px;
-}
-
-.key-row {
-  display: flex;
-  gap: 8px;
-}
-
-.key-field {
-  flex: 1;
-  padding: 8px 12px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  font-size: 14px;
-}
-
-.hint {
-  font-size: 12px;
-  color: var(--color-text-secondary);
-  margin-top: 8px;
 }
 
 .input-area {

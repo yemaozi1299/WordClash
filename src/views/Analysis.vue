@@ -40,12 +40,12 @@ async function runAnalysis() {
     analysis.value = result
   } catch (e) {
     analysis.value = {
-      overallAssessment: '无法获取 AI 分析，请确认 DeepSeek API Key 已配置',
+      overallAssessment: '无法获取 AI 分析，可能未配置 API Key（请联系管理员检查 .env 配置）',
       masteredWords: [],
       weakWords: wordsWithData.value
         .filter(w => (w.stats.correctAttempts / w.stats.totalAttempts) < 0.5)
         .map(w => w.word),
-      reviewSuggestions: '配置 API Key 后获取详细分析',
+      reviewSuggestions: '确认 API Key 已正确配置后可获取详细分析',
       score: overallAccuracy.value
     }
   } finally {

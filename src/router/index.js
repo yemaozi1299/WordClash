@@ -24,6 +24,11 @@ const routes = [
     path: '/bank',
     name: 'bank',
     component: () => import('@/views/WordBank.vue')
+  },
+  {
+    path: '/article',
+    name: 'article',
+    component: () => import('@/views/ArticleReader.vue')
   }
 ]
 

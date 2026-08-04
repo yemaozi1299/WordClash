@@ -6,6 +6,7 @@ const route = useRoute()
 const navItems = [
   { path: '/input', label: '单词录入', icon: '✏️' },
   { path: '/matching', label: '对对碰', icon: '🎯' },
+  { path: '/article', label: '文章阅读', icon: '📖' },
   { path: '/analysis', label: '学习分析', icon: '📊' },
   { path: '/bank', label: '单词库', icon: '📚' }
 ]
