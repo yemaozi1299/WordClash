@@ -32,6 +32,8 @@ export const useArticlesStore = defineStore('articles', () => {
       translations: {},      // 段落翻译缓存：{ [paraIndex]: "中文翻译" }
       breakdowns: {},        // 段落拆解缓存：{ [paraIndex]: { translation, structure, grammar } }
       addedWordIds: [],      // 已从本文入库的生词 id
+      wordDetails: null,           // 预解析生词: { [lowercase]: parseResult }
+      sentenceBreakdowns: null,    // 逐句拆解: { [`${paraIdx}-${sentIdx}`]: { translation, structure, grammar } }
       quiz: null             // 读后理解题：{ questions: [...] }
     }
     articles.value.unshift(entry)

@@ -26,8 +26,9 @@ const importError = ref(null)
 const currentId = ref(null)
 const current = computed(() => articlesStore.getArticleById(currentId.value))
 
-// 全量解析状态
-const analyzing = ref(false)
+// 全量解析状态：analyzingId 绑定正在解析的文章，切换/删除时自动取消
+const analyzingId = ref(null)
+const analyzing = computed(() => analyzingId.value !== null && analyzingId.value === currentId.value)
 const analysisProgress = ref('')
 
 // 生词勾选
@@ -61,13 +62,53 @@ const quizResult = computed(() => {
   return { correct, total: qs.length }
 })
 
-// 简单并发控制：分批并行，避免 API 限流
-async function mapWithConcurrency(items, fn, concurrency = 3) {
+// 并发控制：分批并行，避免 API 限流
+async function mapWithConcurrency(items, fn, concurrency = 6) {
   for (let i = 0; i < items.length; i += concurrency) {
     const batch = items.slice(i, i + concurrency)
     await Promise.all(batch.map((item, idx) => fn(item, i + idx)))
   }
 }
+
+// ---- 生词高亮 ----
+
+function isRawWord(word) {
+  const lower = word.toLowerCase()
+  return !!(current.value?.wordDetails?.[lower])
+}
+
+function rawWordTitle(word) {
+  const lower = word.toLowerCase()
+  const d = current.value?.wordDetails?.[lower]
+  if (!d) return ''
+  const pos = d.meanings?.[0]?.pos || ''
+  const meaning = d.meanings?.[0]?.meaning || ''
+  const phonetic = d.phonetic ? ` ${d.phonetic}` : ''
+  return `${pos ? pos + ' ' : ''}${meaning}${phonetic}`
+}
+
+// ---- 逐句拆解 + 兼容旧数据 ----
+
+function sentenceBreakdownsForPara(idx) {
+  const sb = current.value?.sentenceBreakdowns
+  if (sb) {
+    // 新文章：逐句显示
+    const sents = paragraphs.value[idx]?.split(/[.!?]+/).filter(s => s.trim()) || []
+    return sents
+      .map((text, si) => {
+        const key = `${idx}-${si}`
+        return sb[key] ? { key, text, breakdown: sb[key] } : null
+      })
+      .filter(Boolean)
+  }
+  // 旧文章兼容：段落级拆解
+  if (current.value?.breakdowns?.[idx]) {
+    return [{ key: `old-${idx}`, text: '', breakdown: current.value.breakdowns[idx] }]
+  }
+  return []
+}
+
+// ---- 导入 ----
 
 async function handleFile(e) {
   const file = e.target.files?.[0]
@@ -104,53 +145,96 @@ async function startReading() {
   }
 }
 
-// 全量解析：首屏概要 + 所有段落翻译 + 所有段落拆解
+// ---- 全量解析（4 步：概要 → 预解析生词 → 段落翻译 → 逐句拆解） ----
+
 async function runAnalysis(id) {
-  analyzing.value = true
+  analyzingId.value = id
   analysisProgress.value = '正在解析文章概要...'
   try {
     const a = articlesStore.getArticleById(id)
+    if (!a) return
 
-    // 1. 首屏：摘要 / 难度 / 重点 / 生词清单
-    const result = await analyzeArticle(a.content)
-    articlesStore.updateArticle(id, { analysis: result })
-    selectedWords.value = (result.rawWords || []).map(w => w.word)
+    // 1. 首屏解析（独立 try/catch：失败不阻止后续）
+    let wordDetails = {}
+    try {
+      const result = await analyzeArticle(a.content)
+      articlesStore.updateArticle(id, { analysis: result })
+      selectedWords.value = (result.rawWords || []).map(w => w.word)
 
-    // 2. 全量解析所有段落：翻译 + 拆解（并发 3，逐段渐进更新）
-    const paras = a.content.split(/\n+/).filter(p => p.trim())
+      // 2. 预解析生词（用于正文高亮 + 悬停释义）
+      if (result.rawWords?.length) {
+        analysisProgress.value = '正在预解析生词...'
+        for (const rw of result.rawWords) {
+          if (analyzingId.value !== id) return
+          try {
+            const data = await parseWord(rw.word)
+            wordDetails[rw.word.toLowerCase()] = data
+          } catch { /* 单词失败跳过 */ }
+        }
+      }
+    } catch (e) {
+      importError.value = `概要解析失败: ${e.message}（段落解析仍将继续）`
+    }
+
+    articlesStore.updateArticle(id, { wordDetails })
+    if (analyzingId.value !== id) return
+
+    // 3. 全量段落翻译（并发 6）
+    const allParas = a.content.split(/\n+/).filter(p => p.trim())
     const translations = {}
-    const breakdowns = {}
-    let done = 0
-    const total = paras.length
-    await mapWithConcurrency(paras, async (para, i) => {
+    let doneTrans = 0
+    const totalParas = allParas.length
+    await mapWithConcurrency(allParas, async (para, i) => {
+      if (analyzingId.value !== id) return
       try {
         const t = await translateParagraph(para)
         translations[i] = t.translation
-      } catch (e) {
-        /* 单段翻译失败跳过，不阻塞整体 */
+      } catch { /* 单段失败跳过 */ }
+      doneTrans++
+      analysisProgress.value = `正在翻译段落 ${doneTrans}/${totalParas}...`
+      articlesStore.updateArticle(id, { translations: { ...translations } })
+    }, 6)
+
+    if (analyzingId.value !== id) return
+
+    // 4. 逐句拆解（并发 6）
+    const sentenceBreakdowns = {}
+    const allSentences = []
+    for (let pi = 0; pi < allParas.length; pi++) {
+      const sents = allParas[pi].split(/[.!?]+/).filter(s => s.trim())
+      for (let si = 0; si < sents.length; si++) {
+        allSentences.push({ pi, si, text: sents[si].trim() })
       }
+    }
+    let doneSent = 0
+    const totalSents = allSentences.length
+    await mapWithConcurrency(allSentences, async ({ pi, si, text }) => {
+      if (analyzingId.value !== id) return
       try {
-        const b = await breakdownSentence(para)
-        breakdowns[i] = b
-      } catch (e) {
-        /* 单段拆解失败跳过 */
-      }
-      done++
-      analysisProgress.value = `正在全量解析段落 ${done}/${total}...`
-      articlesStore.updateArticle(id, {
-        translations: { ...translations },
-        breakdowns: { ...breakdowns }
-      })
-    }, 3)
+        const b = await breakdownSentence(text)
+        sentenceBreakdowns[`${pi}-${si}`] = b
+      } catch { /* 单句失败跳过 */ }
+      doneSent++
+      analysisProgress.value = `正在逐句拆解 ${doneSent}/${totalSents}...`
+      articlesStore.updateArticle(id, { sentenceBreakdowns: { ...sentenceBreakdowns } })
+    }, 6)
   } catch (e) {
     importError.value = `解析失败: ${e.message}`
   } finally {
-    analyzing.value = false
-    analysisProgress.value = ''
+    if (analyzingId.value === id) {
+      analyzingId.value = null
+      analysisProgress.value = ''
+    }
   }
 }
 
+// ---- 文章管理 ----
+
 function selectArticle(id) {
+  // 切换文章时取消正在进行的解析（避免旧解析污染新文章视图、空耗配额）
+  if (analyzingId.value && analyzingId.value !== id) {
+    analyzingId.value = null
+  }
   currentId.value = id
   resetViewState()
   const a = articlesStore.getArticleById(id)
@@ -162,11 +246,15 @@ function selectArticle(id) {
 function deleteArticle(id, e) {
   e.stopPropagation()
   if (!confirm('确定删除这篇文章？')) return
+  if (analyzingId.value === id) {
+    analyzingId.value = null  // 取消正在进行的解析
+  }
   articlesStore.removeArticle(id)
   if (currentId.value === id) currentId.value = null
 }
 
-// 正文按词拆分，单词可点击查义
+// ---- 正文渲染 ----
+
 function tokenize(text) {
   return text
     .split(/([a-zA-Z][a-zA-Z'-]*)/g)
@@ -174,21 +262,34 @@ function tokenize(text) {
     .map(s => (/^[a-zA-Z][a-zA-Z'-]*$/.test(s) ? { type: 'word', text: s } : { type: 'text', text: s }))
 }
 
+// ---- 点词查义（预解析优先 → 本地库 → 缓存 → API） ----
+
 async function clickWord(word) {
   const clean = word.replace(/[^a-zA-Z'-]/g, '')
   if (!clean) return
   const lower = clean.toLowerCase()
-  // 本地单词库优先（已入库的直接显示，免调 API）
+
+  // 文章预解析缓存（优先）
+  if (current.value?.wordDetails?.[lower]) {
+    const inBank = wordsStore.words.find(w => w.word.toLowerCase() === lower)
+    activeWord.value = { word: clean, loading: false, data: current.value.wordDetails[lower], inBank: !!inBank, error: null }
+    return
+  }
+
+  // 本地单词库
   const inBank = wordsStore.words.find(w => w.word.toLowerCase() === lower)
   if (inBank) {
     activeWord.value = { word: clean, loading: false, data: inBank, inBank: true, error: null }
     return
   }
+
   // 组件缓存
   if (wordCache.value[lower]) {
     activeWord.value = { word: clean, loading: false, data: wordCache.value[lower], inBank: false, error: null }
     return
   }
+
+  // 调 API
   activeWord.value = { word: clean, loading: true, data: null, inBank: false, error: null }
   try {
     const data = await parseWord(clean)
@@ -245,6 +346,8 @@ async function importSelectedWords() {
   }
 }
 
+// ---- 读后理解题 ----
+
 async function startQuiz() {
   if (generatingQuiz.value || !current.value) return
   generatingQuiz.value = true
@@ -280,31 +383,22 @@ function closeWordPopup() {
 <template>
   <div class="page">
     <h1 class="page-title">文章阅读</h1>
-    <p class="page-desc">导入英文文章，AI 全量解析辅助理解，生词可一键入库</p>
+    <p class="page-desc">导入英文文章，AI 全量解析（摘要 + 生词 + 段落翻译 + 逐句拆解），生词可一键入库</p>
 
     <!-- 导入区 -->
     <div class="import-area">
       <input v-model="inputTitle" placeholder="文章标题（可选）" class="title-input" />
-      <textarea
-        v-model="inputContent"
-        placeholder="粘贴英文文章..."
-        class="content-input"
-        rows="6"
-      ></textarea>
+      <textarea v-model="inputContent" placeholder="粘贴英文文章..." class="content-input" rows="6"></textarea>
       <div class="import-actions">
         <label class="file-label">
           导入 .txt
           <input type="file" accept=".txt" @change="handleFile" hidden />
         </label>
-        <button
-          class="btn btn-primary"
-          :disabled="!inputContent.trim() || importing"
-          @click="startReading"
-        >
+        <button class="btn btn-primary" :disabled="!inputContent.trim() || importing" @click="startReading">
           {{ importing ? '导入中...' : '开始阅读' }}
         </button>
       </div>
-      <p class="hint">导入后将自动全量解析（摘要 + 每段翻译 + 每段拆解），文章越长耗时与 API 消耗越多</p>
+      <p class="hint">导入后将全量解析：摘要、生词高亮、全段翻译、逐句拆解。文章越长耗时越多</p>
     </div>
 
     <p v-if="importError" class="error-msg">{{ importError }}</p>
@@ -384,7 +478,7 @@ function closeWordPopup() {
         </template>
       </div>
 
-      <!-- 正文（全量解析：原文 + 翻译 + 拆解，渐进填充） -->
+      <!-- 正文（原文 + 段落翻译 + 逐句拆解，渐进填充） -->
       <div class="article-body">
         <p v-for="(para, idx) in paragraphs" :key="idx" class="article-para">
           <span class="para-text">
@@ -392,21 +486,21 @@ function closeWordPopup() {
               <span
                 v-if="tok.type === 'word'"
                 class="word-token"
+                :class="{ highlighted: isRawWord(tok.text) }"
+                :title="rawWordTitle(tok.text) || undefined"
                 @click="clickWord(tok.text)"
               >{{ tok.text }}</span>
               <span v-else>{{ tok.text }}</span>
             </span>
           </span>
-          <span
-            v-if="current.translations[idx]"
-            class="para-translation"
-          >{{ current.translations[idx] }}</span>
-          <span v-if="current.breakdowns[idx]" class="para-breakdown">
-            <span class="bd-row"><b>译：</b>{{ current.breakdowns[idx].translation }}</span>
-            <span class="bd-row"><b>结构：</b>{{ current.breakdowns[idx].structure }}</span>
-            <span v-if="current.breakdowns[idx].grammar?.length" class="bd-row">
-              <b>语法：</b>{{ current.breakdowns[idx].grammar.join('；') }}
-            </span>
+          <span v-if="current.translations[idx]" class="para-translation">{{ current.translations[idx] }}</span>
+          <span v-if="sentenceBreakdownsForPara(idx).length" class="para-breakdown">
+            <div v-for="sb in sentenceBreakdownsForPara(idx)" :key="sb.key" class="sent-breakdown">
+              <span v-if="sb.text" class="sent-original">{{ sb.text }}</span>
+              <span class="bd-row"><b>译：</b>{{ sb.breakdown.translation }}</span>
+              <span class="bd-row"><b>结构：</b>{{ sb.breakdown.structure }}</span>
+              <span v-if="sb.breakdown.grammar?.length" class="bd-row"><b>语法：</b>{{ sb.breakdown.grammar.join('；') }}</span>
+            </div>
           </span>
           <span v-else-if="analyzing" class="para-pending">解析中...</span>
         </p>
@@ -426,28 +520,20 @@ function closeWordPopup() {
               class="quiz-opt"
               :class="quizOptionClass(qi, opt, q.answer)"
             >
-              <input
-                type="radio"
-                :name="`q-${qi}`"
-                :value="opt"
-                v-model="quizAnswers[qi]"
-                :disabled="quizSubmitted"
-              />
+              <input type="radio" :name="`q-${qi}`" :value="opt" v-model="quizAnswers[qi]" :disabled="quizSubmitted" />
               {{ opt }}
             </label>
             <p v-if="quizSubmitted" class="quiz-expl">解析：{{ q.explanation }}</p>
           </div>
           <div class="quiz-foot">
             <button v-if="!quizSubmitted" class="btn btn-primary" @click="submitQuiz">提交</button>
-            <span v-else class="quiz-score">
-              得分：{{ quizResult.correct }} / {{ quizResult.total }}
-            </span>
+            <span v-else class="quiz-score">得分：{{ quizResult.correct }} / {{ quizResult.total }}</span>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 点词查义弹窗 -->
+    <!-- 点词弹窗 -->
     <div v-if="activeWord" class="word-popup-overlay" @click="closeWordPopup">
       <div class="word-popup" @click.stop>
         <button class="popup-close" @click="closeWordPopup">×</button>
@@ -462,11 +548,7 @@ function closeWordPopup() {
             </div>
           </div>
           <div v-if="activeWord.data.memoryTip" class="popup-tip">💡 {{ activeWord.data.memoryTip }}</div>
-          <button
-            v-if="!activeWord.inBank"
-            class="btn btn-primary btn-sm"
-            @click="addWordFromLookup"
-          >
+          <button v-if="!activeWord.inBank" class="btn btn-primary btn-sm" @click="addWordFromLookup">
             加入单词库
           </button>
           <span v-else class="in-bank-tag">✓ 已在单词库</span>
@@ -489,7 +571,8 @@ function closeWordPopup() {
   margin-bottom: 28px;
 }
 
-/* 导入区 */
+/* ---- 导入区 ---- */
+
 .import-area {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -550,6 +633,8 @@ function closeWordPopup() {
   line-height: 1.5;
 }
 
+/* ---- 通用 ---- */
+
 .btn {
   padding: 10px 20px;
   border: none;
@@ -585,7 +670,8 @@ function closeWordPopup() {
   margin-bottom: 16px;
 }
 
-/* 历史文章 */
+/* ---- 历史文章 ---- */
+
 .article-list {
   margin-bottom: 24px;
 }
@@ -648,7 +734,8 @@ function closeWordPopup() {
   color: var(--color-danger);
 }
 
-/* 阅读区 */
+/* ---- 阅读区 ---- */
+
 .reader {
   margin-top: 8px;
 }
@@ -715,7 +802,8 @@ function closeWordPopup() {
   font-size: 12px;
 }
 
-/* 生词清单 */
+/* ---- 生词清单 ---- */
+
 .rawwords-box {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -783,7 +871,8 @@ function closeWordPopup() {
   color: var(--color-success);
 }
 
-/* 正文 */
+/* ---- 正文 ---- */
+
 .article-body {
   margin-bottom: 32px;
 }
@@ -808,6 +897,17 @@ function closeWordPopup() {
   background: var(--color-primary-light);
 }
 
+.word-token.highlighted {
+  background: #fff3cd;
+  border-bottom: 2px solid #f5c518;
+  border-radius: 2px;
+  padding: 0 1px;
+}
+
+.word-token.highlighted:hover {
+  background: #ffe69c;
+}
+
 .para-translation {
   display: block;
   margin-top: 6px;
@@ -829,6 +929,27 @@ function closeWordPopup() {
   font-size: 13px;
 }
 
+.sent-breakdown {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: #f0f4ff;
+  border-radius: 6px;
+  border: 1px solid #dde4f0;
+}
+
+.sent-breakdown:first-child {
+  margin-top: 0;
+}
+
+.sent-original {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: var(--color-text);
+  font-size: 13px;
+  font-style: italic;
+}
+
 .bd-row {
   display: block;
   margin-bottom: 4px;
@@ -843,7 +964,8 @@ function closeWordPopup() {
   font-style: italic;
 }
 
-/* 理解题 */
+/* ---- 理解题 ---- */
+
 .quiz-section {
   border-top: 1px solid var(--color-border);
   padding-top: 24px;
@@ -920,7 +1042,8 @@ function closeWordPopup() {
   color: var(--color-primary);
 }
 
-/* 点词弹窗 */
+/* ---- 点词弹窗 ---- */
+
 .word-popup-overlay {
   position: fixed;
   top: 0;
