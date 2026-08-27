@@ -48,7 +48,7 @@ Skills 位于 `.Codex/skills/` 目录，每个 skill 有独立的 `SKILL.md` 文
 
 ## 项目概述
 英文单词学习工具，核心功能链：手动录入 → AI 解析 → 对对碰游戏 → 学习分析。文章辅助阅读作为「读 → 学 → 练」闭环的扩展入口。
-当前 MVP 已完成并可经 GitHub Pages 部署；文章辅助阅读功能已上线，单词默写游戏与金币奖励系统为规划中的下一阶段功能。
+当前 MVP 已完成并可经 GitHub Pages 部署；文章辅助阅读功能已上线，单词默写游戏为规划中的下一阶段功能。
 
 ## 技术栈
 - Vue 3 (Composition API) + Vite
@@ -72,6 +72,12 @@ Skills 位于 `.Codex/skills/` 目录，每个 skill 有独立的 `SKILL.md` 文
 
 stats 包含：totalAttempts, correctAttempts, lastSeen, lastResult, consecutiveCorrect.
 
+## 数据同步机制
+- 运行时数据仍保存在浏览器本地，但统一导出为一个标准数据文件：`data/user-data.json` 对应的 JSON 结构。
+- 页面内提供「导出数据 / 导入数据」入口，导出后的文件可手动覆盖项目中的 `data/user-data.json`。
+- **个人多端同步流程**：在设备 A 导出数据 → 覆盖项目里的 `data/user-data.json` → 提交 git → 设备 B 拉取代码后导入该文件。
+- **定位说明**：这是个人自用场景下的轻量同步方案，不依赖后端，不尝试让浏览器直接写仓库文件。
+
 ## API KEY 机制
 - API Key 不再由用户在页面输入，改为构建时从环境变量注入。
 - **开发环境**：在项目根目录创建 `.env.local`，写入 `VITE_DEEPSEEK_API_KEY=sk-xxx`（该文件被 gitignore，不提交）。模板见 `.env.example`。
@@ -90,8 +96,8 @@ stats 包含：totalAttempts, correctAttempts, lastSeen, lastResult, consecutive
 - **全量解析**（导入后一次性完成）：首屏 `analyzeArticle`（摘要 / 难度 / 重点 / 生词清单）+ 对所有段落并行 `translateParagraph`（翻译）+ `breakdownSentence`（结构 / 语法拆解），并发 3、逐段渐进更新；结果缓存进 article，再次打开免重新解析。
 - **正文单词可点击查义**：本地单词库优先，未命中再调 `parseWord`，支持直接入库（单词级按需，避免全量预解析所有词的过高成本）。
 - **生词入库**：勾选生词清单 → 批量解析入库到 `wordsStore`，自动进入对对碰 / 默写候选池。
-- **读后理解题**：AI 生成 3 道选择题，提交后判分并显示解析。（金币奖励为预留接入点，待金币系统上线后接 `earn()`）
-- **持久化**：`stores/articles.js` + localStorage（`wordclash-articles`），最多保留 20 篇。
+- **读后理解题**：AI 生成 3 道选择题，提交后判分并显示解析。
+- **持久化**：单词与文章统一写入 `wordclash-user-data` 结构，并支持导入 / 导出为标准 JSON 数据文件。
 - **AI 服务**：`deepseek.js` 新增 `analyzeArticle` / `translateParagraph` / `breakdownSentence` / `generateQuiz`。
 
 ## 开发命令
@@ -105,24 +111,11 @@ pnpm run build    # 生产构建
 
 ### 单词默写游戏
 - **玩法**：看中文写英文。显示中文释义（+词性），音标默认隐藏，用户在输入框输入英文单词。
-- **判定**：忽略大小写与首尾空格比对。答对 → 奖励金币 + 更新 stats；答错 → 显示正确答案 + 记 wrong + 进入下一题。无生命机制，答错不结束，一轮 10 题后结算。
+- **判定**：忽略大小写与首尾空格比对。答对 → 更新 stats；答错 → 显示正确答案 + 记 wrong + 进入下一题。无生命机制，答错不结束，一轮 10 题后结算。
 - **选词**：复用对对碰的加权选词逻辑（新词 / 错词优先），与对对碰共享 `words.stats`。
 - **入口**：路由 `/dictation`，侧边栏加入口。
-- **金币挂钩**：每答对 1 题 +5 金币，全对额外 +20。
-
-### 金币奖励系统
-- **获取**（数值待调）：
-  - 对对碰：匹配 1 对 +3 金币，全清额外 +10。
-  - 默写：答对 1 题 +5 金币，全对额外 +20。连击加成可选。
-- **存储**：新建 `stores/coins.js`（Pinia），维护 `balance` 与 `earn(amount)` / `spend(amount)`，localStorage 持久化（key：`wordclash-coins`）。
-- **用途 — 游戏内辅助道具**：
-  - 默写：提示（花金币显示首字母 / 单词长度）、跳过（当前题）。
-  - 对对碰：自动配对（消除一对）、刷新（打乱剩余牌面）。
-  - 防刷：使用道具的题 / 对不计入 correct、不触发金币奖励。
-  - 初版定价建议（待调）：提示 5、跳过 10、自动配对 15、刷新 8。
-- **UI**：侧边栏显示金币余额（跨页可见）；游戏内提供道具按钮，余额不足时禁用。暂不做独立商城页（YAGNI）。
 
 ## Change Log
 - 2026-06-07: 项目初始化，完成 4 个页面骨架
-- 2026-08-03: 同步现有功能至文档；API Key 迁移到 .env 环境变量注入；新增默写游戏与金币奖励系统规划；CI 部署改用 pnpm
+- 2026-08-03: 同步现有功能至文档；API Key 迁移到 .env 环境变量注入；新增默写游戏规划；CI 部署改用 pnpm
 - 2026-08-04: 新增文章辅助阅读功能（导入 / 首屏解析 / 分层精读 / 生词入库 / 读后理解题），打通「读 → 学 → 练」闭环

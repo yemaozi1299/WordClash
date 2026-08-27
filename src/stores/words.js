@@ -1,11 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { loadFromLocalStorage, saveWords, exportToFile } from '@/services/storage.js'
+import { loadAppData, updateAppData } from '@/services/storage.js'
 
 export const useWordsStore = defineStore('words', () => {
   const words = ref([])
   const loading = ref(false)
   const error = ref(null)
+  const initialized = ref(false)
 
   const wordCount = computed(() => words.value.length)
 
@@ -13,15 +14,16 @@ export const useWordsStore = defineStore('words', () => {
     [...words.value].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
   )
 
-  function init() {
-    const saved = loadFromLocalStorage()
-    if (saved && saved.words) {
-      words.value = saved.words
-    }
+  function init(force = false) {
+    if (initialized.value && !force) return
+
+    const saved = loadAppData()
+    words.value = saved.words
+    initialized.value = true
   }
 
   function persist() {
-    saveWords({ words: words.value })
+    updateAppData({ words: words.value })
   }
 
   function addWord(wordData) {
@@ -71,14 +73,22 @@ export const useWordsStore = defineStore('words', () => {
     persist()
   }
 
-  function exportData() {
-    exportToFile({ words: words.value })
+  function replaceWords(nextWords, persistNow = true) {
+    words.value = Array.isArray(nextWords) ? nextWords : []
+    if (persistNow) {
+      persist()
+    }
+  }
+
+  function snapshot() {
+    return [...words.value]
   }
 
   return {
     words,
     loading,
     error,
+    initialized,
     wordCount,
     sortedByRecent,
     init,
@@ -86,6 +96,7 @@ export const useWordsStore = defineStore('words', () => {
     updateStats,
     getWordById,
     removeWord,
-    exportData
+    replaceWords,
+    snapshot
   }
 })

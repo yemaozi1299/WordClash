@@ -9,8 +9,13 @@ defineEmits(['close'])
 <template>
   <div class="word-card">
     <div class="card-header">
-      <h3 class="word-title">{{ word.word }}</h3>
-      <span class="phonetic">{{ word.phonetic }}</span>
+      <div>
+        <h3 class="word-title">{{ word.word }}</h3>
+        <span class="phonetic">{{ word.phonetic || '暂无音标' }}</span>
+      </div>
+      <div v-if="word.stats" class="stats-pill">
+        <span>正确率 {{ word.stats.totalAttempts ? Math.round(word.stats.correctAttempts / word.stats.totalAttempts * 100) : 0 }}%</span>
+      </div>
     </div>
     <div class="card-body">
       <div class="meaning-list">
@@ -36,8 +41,8 @@ defineEmits(['close'])
         <p>{{ word.memoryTip }}</p>
       </div>
       <div v-if="word.stats" class="card-section stats">
-        <span>正确率: {{ word.stats.totalAttempts ? Math.round(word.stats.correctAttempts / word.stats.totalAttempts * 100) : 0 }}%</span>
-        <span>出现次数: {{ word.stats.totalAttempts }}</span>
+        <span>出现次数：{{ word.stats.totalAttempts }}</span>
+        <span>连续答对：{{ word.stats.consecutiveCorrect }}</span>
       </div>
     </div>
   </div>
@@ -45,50 +50,67 @@ defineEmits(['close'])
 
 <style scoped>
 .word-card {
-  background: var(--color-surface);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(249, 251, 255, 0.98));
   border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  padding: 20px;
+  border-radius: 20px;
+  padding: 22px;
 }
 
 .card-header {
-  margin-bottom: 16px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
 }
 
 .word-title {
-  font-size: 22px;
-  font-weight: 600;
-  display: inline;
-  margin-right: 12px;
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 6px;
 }
 
 .phonetic {
+  display: inline-block;
   color: var(--color-text-secondary);
   font-size: 15px;
 }
 
-.meaning-item {
-  margin-bottom: 6px;
-}
-
-.pos {
-  display: inline-block;
+.stats-pill {
+  padding: 8px 12px;
+  border-radius: 999px;
   background: var(--color-primary-light);
   color: var(--color-primary);
   font-size: 12px;
-  padding: 1px 6px;
-  border-radius: 4px;
-  margin-right: 8px;
-  font-weight: 500;
+  font-weight: 700;
+}
+
+.meaning-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.pos {
+  display: inline-flex;
+  align-items: center;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-weight: 700;
 }
 
 .meaning {
   font-size: 15px;
+  line-height: 1.7;
 }
 
 .card-section {
-  margin-top: 14px;
-  padding-top: 14px;
+  margin-top: 16px;
+  padding-top: 16px;
   border-top: 1px solid var(--color-border);
 }
 
@@ -103,18 +125,21 @@ defineEmits(['close'])
 .example {
   color: var(--color-text-secondary);
   font-size: 14px;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
   font-style: italic;
+  line-height: 1.7;
 }
 
 .synonyms {
   color: var(--color-primary);
   font-size: 14px;
+  line-height: 1.7;
 }
 
 .stats {
   display: flex;
-  gap: 20px;
+  gap: 16px;
+  flex-wrap: wrap;
   font-size: 13px;
   color: var(--color-text-secondary);
 }

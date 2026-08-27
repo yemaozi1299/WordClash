@@ -52,16 +52,26 @@ async function runAnalysis() {
     analyzing.value = false
   }
 }
-
-wordsStore.init()
 </script>
 
 <template>
-  <div class="page">
-    <h1 class="page-title">学习分析</h1>
-    <p class="page-desc">基于对对碰数据，AI 分析你的单词掌握情况</p>
+  <div class="page-shell">
+    <header class="page-header">
+      <div class="page-title-group">
+        <span class="page-eyebrow">Insights</span>
+        <h1 class="page-title">学习分析</h1>
+        <p class="page-desc">
+          从练习结果里看你的掌握趋势。这里会汇总练习覆盖率、总体正确率，以及 AI 给出的复习建议。
+        </p>
+      </div>
+      <div class="page-actions">
+        <button class="btn btn-primary" :disabled="analyzing || wordsWithData.length === 0" @click="runAnalysis">
+          {{ analyzing ? '分析中...' : 'AI 深度分析' }}
+        </button>
+      </div>
+    </header>
 
-    <div class="stats-grid">
+    <section class="stats-grid">
       <div class="stat-card">
         <span class="stat-value">{{ wordsStore.wordCount }}</span>
         <span class="stat-label">总单词数</span>
@@ -78,13 +88,9 @@ wordsStore.init()
         <span class="stat-value">{{ wordsWithoutData.length }}</span>
         <span class="stat-label">未练习</span>
       </div>
-    </div>
+    </section>
 
-    <button class="btn-analyze" :disabled="analyzing || wordsWithData.length === 0" @click="runAnalysis">
-      {{ analyzing ? '分析中...' : 'AI 深度分析' }}
-    </button>
-
-    <div v-if="analysis" class="analysis-result">
+    <section v-if="analysis" class="panel analysis-result">
       <div class="analysis-score">
         <span class="score-num">{{ analysis.score }}</span>
         <span class="score-unit">分</span>
@@ -93,92 +99,43 @@ wordsStore.init()
 
       <div v-if="analysis.weakWords?.length" class="ar-section">
         <h4>需要加强的单词</h4>
-        <span v-for="w in analysis.weakWords" :key="w" class="tag tag-weak">{{ w }}</span>
+        <span v-for="w in analysis.weakWords" :key="w" class="tag tag-danger">{{ w }}</span>
       </div>
 
       <div v-if="analysis.masteredWords?.length" class="ar-section">
         <h4>已掌握的单词</h4>
-        <span v-for="w in analysis.masteredWords" :key="w" class="tag tag-mastered">{{ w }}</span>
+        <span v-for="w in analysis.masteredWords" :key="w" class="tag tag-success">{{ w }}</span>
       </div>
 
       <div v-if="analysis.reviewSuggestions" class="ar-section">
         <h4>复习建议</h4>
         <p class="analysis-text">{{ analysis.reviewSuggestions }}</p>
       </div>
-    </div>
+    </section>
 
-    <div v-if="!analysis && wordsWithData.length === 0" class="empty-state">
-      还没有练习数据，先去对对碰玩一轮吧
-    </div>
+    <section v-else-if="wordsWithData.length === 0" class="empty-state">
+      <strong>还没有练习数据</strong>
+      先去对对碰玩一轮，再回来这里看 AI 对你最近学习状态的总结。
+    </section>
+    <section v-else class="panel analysis-placeholder">
+      <span class="chip">等待分析</span>
+      <h2 class="section-title">你的练习数据已经准备好了</h2>
+      <p class="section-desc">
+        点击右上角的「AI 深度分析」，系统会基于当前词库的练习覆盖率、正确率和最近表现生成一份复盘建议。
+      </p>
+    </section>
   </div>
 </template>
 
 <style scoped>
-.page-title {
-  font-size: 24px;
-  font-weight: 600;
-  margin-bottom: 6px;
-}
-
-.page-desc {
-  color: var(--color-text-secondary);
-  font-size: 14px;
-  margin-bottom: 24px;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-  margin-bottom: 24px;
-}
-
-.stat-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  padding: 20px;
-  text-align: center;
-}
-
-.stat-value {
-  display: block;
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--color-primary);
-}
-
-.stat-label {
-  display: block;
-  font-size: 12px;
-  color: var(--color-text-secondary);
-  margin-top: 4px;
-}
-
-.btn-analyze {
-  display: block;
-  width: 100%;
-  padding: 12px;
-  background: var(--color-primary);
-  color: #fff;
-  border: none;
-  border-radius: var(--radius);
-  font-size: 15px;
-  cursor: pointer;
-  margin-bottom: 24px;
-}
-
-.btn-analyze:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 .analysis-result {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  padding: 24px;
   animation: fadeIn 0.3s ease;
+}
+
+.analysis-placeholder {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 @keyframes fadeIn {
@@ -225,28 +182,4 @@ wordsStore.init()
   letter-spacing: 0.5px;
 }
 
-.tag {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 13px;
-  margin: 0 6px 6px 0;
-}
-
-.tag-weak {
-  background: #fef0f0;
-  color: var(--color-danger);
-}
-
-.tag-mastered {
-  background: #e8f8f0;
-  color: var(--color-success);
-}
-
-.empty-state {
-  text-align: center;
-  color: var(--color-text-secondary);
-  padding: 60px 0;
-  font-size: 15px;
-}
 </style>

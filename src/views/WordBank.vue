@@ -44,111 +44,125 @@ function removeWord(id, e) {
   }
 }
 
-wordsStore.init()
+const weakCount = computed(() =>
+  wordsStore.words.filter(w => w.stats.totalAttempts > 0 && (w.stats.correctAttempts / w.stats.totalAttempts) < 0.6).length
+)
 </script>
 
 <template>
-  <div class="page">
-    <h1 class="page-title">单词库</h1>
-    <p class="page-desc">共 {{ wordsStore.wordCount }} 个单词</p>
+  <div class="page-shell">
+    <header class="page-header">
+      <div class="page-title-group">
+        <span class="page-eyebrow">Library</span>
+        <h1 class="page-title">单词库</h1>
+        <p class="page-desc">
+          这里汇总你所有已录入的单词。你可以检索、排序、查看详情，也可以快速清理低价值或录错的单词。
+        </p>
+      </div>
+    </header>
 
-    <div class="toolbar">
-      <input
-        v-model="searchQuery"
-        type="text"
-        placeholder="搜索单词或释义..."
-        class="search-input"
-      />
-      <select v-model="sortBy" class="sort-select">
-        <option value="recent">最近录入</option>
-        <option value="alphabetical">字母顺序</option>
-        <option value="accuracy">正确率</option>
-      </select>
-    </div>
+    <section class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-label">总词量</span>
+        <span class="stat-value">{{ wordsStore.wordCount }}</span>
+        <span class="stat-hint">所有录入词都会在这里统一维护</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">当前筛选结果</span>
+        <span class="stat-value">{{ filteredWords.length }}</span>
+        <span class="stat-hint">会随着搜索和排序实时更新</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">待加强词</span>
+        <span class="stat-value">{{ weakCount }}</span>
+        <span class="stat-hint">正确率低于 60% 的单词数量</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">当前排序</span>
+        <span class="stat-value">{{ sortBy === 'recent' ? '最近录入' : sortBy === 'alphabetical' ? '字母顺序' : '正确率' }}</span>
+        <span class="stat-hint">通过筛选器快速切换查看方式</span>
+      </div>
+    </section>
 
-    <div v-if="filteredWords.length === 0" class="empty-state">
-      没有匹配的单词
-    </div>
+    <section class="panel panel-soft stack-layout">
+      <div class="toolbar">
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="搜索单词、释义或记忆线索..."
+          class="input"
+        />
+        <select v-model="sortBy" class="select toolbar-select">
+          <option value="recent">最近录入</option>
+          <option value="alphabetical">字母顺序</option>
+          <option value="accuracy">正确率</option>
+        </select>
+      </div>
 
-    <div class="word-list">
-      <div
-        v-for="w in filteredWords"
-        :key="w.id"
-        class="word-row"
-        :class="{ expanded: selectedWord?.id === w.id }"
-        @click="selectedWord = selectedWord?.id === w.id ? null : w"
-      >
-        <div class="word-summary">
-          <span class="ws-word">{{ w.word }}</span>
-          <span class="ws-meaning">{{ w.meanings[0]?.meaning }}</span>
-          <span class="ws-accuracy">{{ accuracy(w) }}</span>
-          <button class="btn-delete" @click="removeWord(w.id, $event)" title="删除">×</button>
-        </div>
-        <div v-if="selectedWord?.id === w.id" class="word-detail">
-          <WordCard :word="w" />
+      <div v-if="filteredWords.length === 0" class="empty-state">
+        <strong>没有匹配的单词</strong>
+        试试换一个关键词，或者切换排序方式看看。
+      </div>
+
+      <div v-else class="word-list">
+        <div
+          v-for="w in filteredWords"
+          :key="w.id"
+          class="word-row"
+          :class="{ expanded: selectedWord?.id === w.id }"
+          @click="selectedWord = selectedWord?.id === w.id ? null : w"
+        >
+          <div class="word-summary">
+            <div class="word-main">
+              <div class="word-topline">
+                <strong class="ws-word">{{ w.word }}</strong>
+                <span class="muted">{{ w.phonetic || '暂无音标' }}</span>
+              </div>
+              <span class="ws-meaning">{{ w.meanings[0]?.meaning }}</span>
+            </div>
+            <div class="word-side">
+              <span class="tag" :class="w.stats.totalAttempts ? 'tag-warning' : ''">{{ accuracy(w) }}</span>
+              <button class="icon-btn" @click="removeWord(w.id, $event)" title="删除">×</button>
+            </div>
+          </div>
+          <div v-if="selectedWord?.id === w.id" class="word-detail">
+            <WordCard :word="w" />
+          </div>
         </div>
       </div>
-    </div>
+    </section>
   </div>
 </template>
 
 <style scoped>
-.page-title {
-  font-size: 24px;
-  font-weight: 600;
-  margin-bottom: 6px;
-}
-
-.page-desc {
-  color: var(--color-text-secondary);
-  font-size: 14px;
-  margin-bottom: 20px;
-}
-
 .toolbar {
   display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.search-input {
-  flex: 1;
-  padding: 10px 14px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  font-size: 14px;
-  outline: none;
-}
-
-.search-input:focus {
-  border-color: var(--color-primary);
-}
-
-.sort-select {
-  padding: 10px 14px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  font-size: 14px;
-  background: var(--color-surface);
-  cursor: pointer;
+  gap: 14px;
+  align-items: center;
 }
 
 .word-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 12px;
+}
+
+.toolbar-select {
+  width: 200px;
 }
 
 .word-row {
-  background: var(--color-surface);
+  background: rgba(255, 255, 255, 0.82);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   cursor: pointer;
-  transition: border-color 0.15s;
+  transition: all 0.18s ease;
+  overflow: hidden;
 }
 
 .word-row:hover {
   border-color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
 }
 
 .word-row.expanded {
@@ -158,31 +172,44 @@ wordsStore.init()
 .word-summary {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 12px 16px;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+}
+
+.word-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.word-topline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
 }
 
 .ws-word {
-  font-weight: 600;
-  font-size: 15px;
-  min-width: 120px;
+  font-size: 18px;
 }
 
 .ws-meaning {
   flex: 1;
   color: var(--color-text-secondary);
   font-size: 14px;
+  line-height: 1.7;
 }
 
-.ws-accuracy {
-  font-size: 13px;
-  color: var(--color-primary);
-  font-weight: 500;
+.word-side {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .word-detail {
-  padding: 0 16px 16px;
-  animation: slideDown 0.2s ease;
+  padding: 0 20px 20px;
+  animation: slideDown 0.22s ease;
 }
 
 @keyframes slideDown {
@@ -190,30 +217,33 @@ wordsStore.init()
   to { opacity: 1; transform: translateY(0); }
 }
 
-.btn-delete {
-  background: none;
+.icon-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
   border: none;
+  background: var(--color-surface);
   color: var(--color-text-secondary);
-  font-size: 18px;
   cursor: pointer;
-  padding: 0 4px;
-  line-height: 1;
-  opacity: 0;
-  transition: opacity 0.15s, color 0.15s;
 }
 
-.word-summary:hover .btn-delete {
-  opacity: 1;
-}
-
-.btn-delete:hover {
+.icon-btn:hover {
   color: var(--color-danger);
+  background: var(--color-danger-light);
 }
 
-.empty-state {
-  text-align: center;
-  color: var(--color-text-secondary);
-  padding: 60px 0;
-  font-size: 15px;
+@media (max-width: 900px) {
+  .toolbar {
+    flex-direction: column;
+  }
+
+  .toolbar-select {
+    width: 100%;
+  }
+
+  .word-summary {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 </style>

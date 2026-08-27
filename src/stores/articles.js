@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { loadArticles, saveArticles } from '@/services/storage.js'
+import { loadAppData, updateAppData } from '@/services/storage.js'
 
 // 容量保护：localStorage 有限，最多保留最近 MAX_ARTICLES 篇
 const MAX_ARTICLES = 20
@@ -8,18 +8,22 @@ const MAX_ARTICLES = 20
 export const useArticlesStore = defineStore('articles', () => {
   const articles = ref([])
   const loading = ref(false)
+  const initialized = ref(false)
 
   const articleCount = computed(() => articles.value.length)
   const sortedByRecent = computed(() =>
     [...articles.value].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
   )
 
-  function init() {
-    articles.value = loadArticles()
+  function init(force = false) {
+    if (initialized.value && !force) return
+
+    articles.value = loadAppData().articles
+    initialized.value = true
   }
 
   function persist() {
-    saveArticles(articles.value)
+    updateAppData({ articles: articles.value })
   }
 
   function addArticle({ title, content }) {
@@ -49,11 +53,13 @@ export const useArticlesStore = defineStore('articles', () => {
     return articles.value.find(a => a.id === id)
   }
 
-  function updateArticle(id, patch) {
+  function updateArticle(id, patch, options = {}) {
     const a = getArticleById(id)
     if (!a) return
     Object.assign(a, patch)
-    persist()
+    if (options.persist !== false) {
+      persist()
+    }
   }
 
   function removeArticle(id) {
@@ -61,15 +67,34 @@ export const useArticlesStore = defineStore('articles', () => {
     persist()
   }
 
+  function replaceArticles(nextArticles, persistNow = true) {
+    articles.value = Array.isArray(nextArticles) ? nextArticles : []
+    if (persistNow) {
+      persist()
+    }
+  }
+
+  function snapshot() {
+    return [...articles.value]
+  }
+
+  function persistNow() {
+    persist()
+  }
+
   return {
     articles,
     loading,
+    initialized,
     articleCount,
     sortedByRecent,
     init,
     addArticle,
     getArticleById,
     updateArticle,
-    removeArticle
+    removeArticle,
+    replaceArticles,
+    snapshot,
+    persistNow
   }
 })

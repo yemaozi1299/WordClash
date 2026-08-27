@@ -74,9 +74,9 @@ export const useGameStore = defineStore('game', () => {
   function selectWeighted(pool, count) {
     const selected = []
     const remaining = [...pool]
-    const totalScore = remaining.reduce((sum, item) => sum + item.score, 0)
 
     while (selected.length < count && remaining.length > 0) {
+      const totalScore = remaining.reduce((sum, item) => sum + item.score, 0)
       let rand = Math.random() * totalScore
       let i = 0
       while (rand > 0 && i < remaining.length) {
@@ -136,9 +136,7 @@ export const useGameStore = defineStore('game', () => {
 
   function selectLeft(card) {
     if (matchResult.value === 'correct') return
-    selectedLeft.value = card
-    selectedRight.value = null
-    matchResult.value = null
+    resetSelection(card)
   }
 
   function selectRight(card) {
@@ -178,9 +176,7 @@ export const useGameStore = defineStore('game', () => {
     rightCards.value[rightSlot] = { ...rightCards.value[rightSlot], text: '', wordId: null, cleared: true }
 
     pendingRefresh.value++
-    selectedLeft.value = null
-    selectedRight.value = null
-    matchResult.value = null
+    resetSelection()
 
     if (pendingRefresh.value >= 2) {
       batchRefresh()
@@ -251,6 +247,12 @@ export const useGameStore = defineStore('game', () => {
     return [...sessionHistory.value]
   }
 
+  function resetSelection(nextLeft = null) {
+    selectedLeft.value = nextLeft
+    selectedRight.value = null
+    matchResult.value = null
+  }
+
   const allCleared = computed(() =>
     leftCards.value.every(c => c.cleared) || rightCards.value.every(c => c.cleared)
   )
@@ -269,6 +271,7 @@ export const useGameStore = defineStore('game', () => {
     startSession,
     selectLeft,
     selectRight,
+    resetSelection,
     clearMatchedPair,
     batchRefresh,
     endSession

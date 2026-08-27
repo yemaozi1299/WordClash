@@ -8,14 +8,17 @@ const gameStore = useGameStore()
 const wordsStore = useWordsStore()
 const lastAnalysis = ref(null)
 const analyzing = ref(false)
+const startNotice = ref('')
 
 const canStart = computed(() => wordsStore.wordCount >= 2)
 
 function handleStart() {
   const ok = gameStore.startSession()
   if (!ok) {
-    alert('至少需要 2 个单词才能开始游戏')
+    startNotice.value = '至少需要 2 个单词才能开始游戏，请先去单词录入页补充词库。'
+    return
   }
+  startNotice.value = ''
 }
 
 function handleLeftClick(card) {
@@ -33,9 +36,7 @@ function handleRightClick(card) {
     }, 400)
   } else if (gameStore.matchResult === 'wrong') {
     setTimeout(() => {
-      gameStore.selectedLeft = null
-      gameStore.selectedRight = null
-      gameStore.matchResult = null
+      gameStore.resetSelection()
     }, 600)
   }
 }
@@ -102,27 +103,67 @@ const refreshHint = computed(() => {
   if (n <= 0) return '刷新中...'
   return `再消除 ${n} 对刷新单词`
 })
-
-wordsStore.init()
 </script>
 
 <template>
-  <div class="page">
-    <h1 class="page-title">对对碰</h1>
-    <p class="page-desc">点击左边英文，再点击右边对应的中文释义进行匹配</p>
+  <div class="page-shell">
+    <header class="page-header">
+      <div class="page-title-group">
+        <span class="page-eyebrow">Practice</span>
+        <h1 class="page-title">对对碰</h1>
+        <p class="page-desc">
+          通过英文和中文释义的快速匹配，强化你对单词的第一反应。系统会根据练习结果自动调整下一轮的出题优先级。
+        </p>
+      </div>
+    </header>
 
-    <div v-if="!gameStore.sessionActive" class="game-start">
-      <button class="btn btn-start" :disabled="!canStart" @click="handleStart">
-        {{ canStart ? '开始游戏' : '单词不足，请先录入' }}
-      </button>
-      <p class="word-count">当前词库: {{ wordsStore.wordCount }} 个单词</p>
-    </div>
+    <section class="stats-grid">
+      <div class="stat-card">
+        <span class="stat-label">词库总量</span>
+        <span class="stat-value">{{ wordsStore.wordCount }}</span>
+        <span class="stat-hint">至少需要 2 个单词才可以开始游戏</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">本轮正确</span>
+        <span class="stat-value">{{ sessionCorrect }}</span>
+        <span class="stat-hint">匹配成功后会计入学习记录</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">本轮错误</span>
+        <span class="stat-value">{{ sessionWrong }}</span>
+        <span class="stat-hint">错误结果会影响后续权重抽样</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">牌面刷新</span>
+        <span class="stat-value">{{ refreshHint }}</span>
+        <span class="stat-hint">每消除 2 对会自动补入新词</span>
+      </div>
+    </section>
 
-    <div v-else class="game-area">
-      <div class="game-header">
-        <span class="score">正确 {{ sessionCorrect }} / 错误 {{ sessionWrong }}</span>
-        <span class="refresh-hint">{{ refreshHint }}</span>
-        <button class="btn btn-end" @click="handleEndSession">结束本轮</button>
+    <section v-if="!gameStore.sessionActive" class="panel panel-soft game-start-card">
+      <div class="start-copy">
+        <h2 class="section-title">开始一轮快速巩固</h2>
+        <p class="section-desc">
+          推荐在录入一批新词后马上来玩一轮，让新词尽快进入记忆回路。
+        </p>
+      </div>
+      <div class="start-actions">
+        <button class="btn btn-primary btn-large" :disabled="!canStart" @click="handleStart">
+          {{ canStart ? '开始游戏' : '单词不足，请先录入' }}
+        </button>
+        <p class="muted">当前词库：{{ wordsStore.wordCount }} 个单词</p>
+      </div>
+      <p v-if="startNotice" class="notice notice-info">{{ startNotice }}</p>
+    </section>
+
+    <section v-else class="panel stack-layout game-panel">
+      <div class="game-toolbar">
+        <div class="toolbar-pill-group">
+          <span class="tag">{{ sessionCorrect }} 次正确</span>
+          <span class="tag tag-danger">{{ sessionWrong }} 次错误</span>
+          <span class="tag tag-warning">{{ refreshHint }}</span>
+        </div>
+        <button class="btn btn-secondary" @click="handleEndSession">结束本轮</button>
       </div>
 
       <div class="board">
@@ -148,14 +189,14 @@ wordsStore.init()
           </div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <div v-if="analyzing" class="analysis-loading">
+    <div v-if="analyzing" class="panel analysis-loading">
       正在分析学习情况...
     </div>
 
-    <div v-if="lastAnalysis" class="analysis-card">
-      <h3>学习分析</h3>
+    <div v-if="lastAnalysis" class="panel analysis-card">
+      <h3 class="section-title">本轮学习分析</h3>
       <div class="analysis-score">
         <span class="score-number">{{ lastAnalysis.score }}</span>
         <span class="score-label">分</span>
@@ -163,11 +204,11 @@ wordsStore.init()
       <p class="analysis-text">{{ lastAnalysis.overallAssessment }}</p>
       <div v-if="lastAnalysis.weakWords?.length" class="analysis-section">
         <h4>需要加强</h4>
-        <span v-for="w in lastAnalysis.weakWords" :key="w" class="tag tag-weak">{{ w }}</span>
+        <span v-for="w in lastAnalysis.weakWords" :key="w" class="tag tag-danger">{{ w }}</span>
       </div>
       <div v-if="lastAnalysis.masteredWords?.length" class="analysis-section">
         <h4>已掌握</h4>
-        <span v-for="w in lastAnalysis.masteredWords" :key="w" class="tag tag-mastered">{{ w }}</span>
+        <span v-for="w in lastAnalysis.masteredWords" :key="w" class="tag tag-success">{{ w }}</span>
       </div>
       <p v-if="lastAnalysis.reviewSuggestions" class="analysis-text">{{ lastAnalysis.reviewSuggestions }}</p>
     </div>
@@ -175,92 +216,43 @@ wordsStore.init()
 </template>
 
 <style scoped>
-.page-title {
-  font-size: 24px;
-  font-weight: 600;
-  margin-bottom: 6px;
+.game-start-card,
+.game-panel {
+  gap: 20px;
 }
 
-.page-desc {
-  color: var(--color-text-secondary);
-  font-size: 14px;
-  margin-bottom: 28px;
+.start-copy,
+.start-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.game-start {
-  text-align: center;
-  padding: 60px 0;
+.btn-large {
+  min-height: 52px;
+  padding: 0 28px;
 }
 
-.btn-start {
-  padding: 14px 40px;
-  font-size: 16px;
-  background: var(--color-primary);
-  color: #fff;
-  border: none;
-  border-radius: var(--radius);
-  cursor: pointer;
-  font-weight: 500;
-}
-
-.btn-start:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.word-count {
-  margin-top: 12px;
-  color: var(--color-text-secondary);
-  font-size: 13px;
-}
-
-.game-area {
-  animation: fadeIn 0.2s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.game-header {
+.game-toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
-.score {
-  font-size: 14px;
-  color: var(--color-text-secondary);
-}
-
-.refresh-hint {
-  font-size: 12px;
-  color: var(--color-primary);
-  background: var(--color-primary-light);
-  padding: 3px 10px;
-  border-radius: 12px;
-}
-
-.btn-end {
-  padding: 8px 16px;
-  background: transparent;
-  color: var(--color-text-secondary);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  cursor: pointer;
-  font-size: 13px;
-}
-
-.btn-end:hover {
-  background: var(--color-bg);
+.toolbar-pill-group {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .board {
   display: flex;
   gap: 20px;
   justify-content: center;
+  align-items: stretch;
+  padding: 8px 0;
 }
 
 .column {
@@ -280,7 +272,7 @@ wordsStore.init()
   padding: 16px 20px;
   background: var(--color-surface);
   border: 2px solid var(--color-border);
-  border-radius: var(--radius);
+  border-radius: 18px;
   cursor: pointer;
   font-size: 15px;
   text-align: center;
@@ -304,13 +296,13 @@ wordsStore.init()
 
 .match-card.matched {
   border-color: var(--color-success);
-  background: #e8f8f0;
+  background: var(--color-success-light);
   animation: matchPop 0.3s ease;
 }
 
 .match-card.wrong {
   border-color: var(--color-danger);
-  background: #fef0f0;
+  background: var(--color-danger-light);
   animation: shake 0.4s ease;
 }
 
@@ -341,16 +333,7 @@ wordsStore.init()
 }
 
 .analysis-card {
-  margin-top: 32px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius);
-  padding: 24px;
-}
-
-.analysis-card h3 {
-  font-size: 16px;
-  margin-bottom: 16px;
+  gap: 0;
 }
 
 .analysis-score {
@@ -388,21 +371,13 @@ wordsStore.init()
   margin-bottom: 8px;
 }
 
-.tag {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 13px;
-  margin: 0 6px 6px 0;
-}
+@media (max-width: 900px) {
+  .board {
+    flex-direction: column;
+  }
 
-.tag-weak {
-  background: #fef0f0;
-  color: var(--color-danger);
-}
-
-.tag-mastered {
-  background: #e8f8f0;
-  color: var(--color-success);
+  .column-divider {
+    display: none;
+  }
 }
 </style>
