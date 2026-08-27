@@ -131,9 +131,8 @@ async function handleImport(event) {
   display: flex;
   flex-direction: column;
   gap: 18px;
-  background:
-    linear-gradient(180deg, rgba(14, 26, 46, 0.96), rgba(18, 33, 58, 0.98));
-  color: #fff;
+  background: linear-gradient(180deg, var(--color-sidebar-bg), var(--color-sidebar-bg-alt));
+  color: var(--color-sidebar-text);
   z-index: 20;
   box-shadow: 18px 0 36px rgba(10, 18, 34, 0.18);
 }
@@ -151,7 +150,7 @@ async function handleImport(event) {
   border-radius: 14px;
   display: grid;
   place-items: center;
-  background: linear-gradient(135deg, #5d8cff, #7ea2ff);
+  background: var(--color-sidebar-brand);
   color: #fff;
   font-size: 15px;
   font-weight: 800;
@@ -172,7 +171,7 @@ async function handleImport(event) {
 
 .brand-subtitle {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.66);
+  color: var(--color-sidebar-text-muted);
 }
 
 .sidebar-section {
@@ -186,7 +185,7 @@ async function handleImport(event) {
   font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.46);
+  color: var(--color-sidebar-label);
 }
 
 .summary-grid {
@@ -198,8 +197,8 @@ async function handleImport(event) {
 .summary-card {
   padding: 14px 12px;
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-sidebar-surface);
+  border: 1px solid var(--color-sidebar-border);
 }
 
 .summary-value {
@@ -212,7 +211,7 @@ async function handleImport(event) {
   display: block;
   margin-top: 4px;
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.66);
+  color: var(--color-sidebar-text-muted);
 }
 
 .nav-list {
@@ -230,19 +229,19 @@ async function handleImport(event) {
   padding: 14px 14px;
   border-radius: 18px;
   text-decoration: none;
-  color: rgba(255, 255, 255, 0.82);
+  color: var(--color-sidebar-text);
   font-size: 14px;
   transition: all 0.18s ease;
   border: 1px solid transparent;
 }
 
 .nav-item:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-sidebar-surface-hover);
   color: #fff;
 }
 
 .nav-item.active {
-  background: linear-gradient(135deg, rgba(61, 110, 232, 0.26), rgba(93, 140, 255, 0.18));
+  background: var(--color-sidebar-active);
   color: #fff;
   border-color: rgba(126, 162, 255, 0.24);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
@@ -254,7 +253,7 @@ async function handleImport(event) {
   border-radius: 12px;
   display: grid;
   place-items: center;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--color-sidebar-surface);
   text-align: center;
   font-size: 12px;
   font-weight: 700;
@@ -274,7 +273,7 @@ async function handleImport(event) {
 
 .nav-caption {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.58);
+  color: var(--color-sidebar-text-muted);
 }
 
 .sidebar-bottom {
@@ -284,15 +283,15 @@ async function handleImport(event) {
 .sync-card {
   padding: 16px;
   border-radius: 22px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--color-sidebar-surface);
+  border: 1px solid var(--color-sidebar-border);
 }
 
 .sync-desc {
   margin-top: 6px;
   font-size: 13px;
   line-height: 1.7;
-  color: rgba(255, 255, 255, 0.68);
+  color: var(--color-sidebar-text-muted);
 }
 
 .sync-actions {
@@ -315,11 +314,11 @@ async function handleImport(event) {
 }
 
 .sync-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--color-sidebar-surface-hover);
 }
 
 .sync-btn-primary {
-  background: linear-gradient(135deg, #3d6ee8, #5d8cff);
+  background: var(--color-sidebar-brand);
   border-color: transparent;
 }
 
@@ -327,7 +326,7 @@ async function handleImport(event) {
   margin-top: 12px;
   font-size: 12px;
   line-height: 1.6;
-  color: rgba(255, 255, 255, 0.72);
+  color: var(--color-sidebar-text-muted);
 }
 
 @media (max-width: 900px) {

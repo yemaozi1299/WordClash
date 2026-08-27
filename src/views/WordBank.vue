@@ -1,9 +1,11 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useWordsStore } from '@/stores/words.js'
+import { useFeedbackStore } from '@/stores/feedback.js'
 import WordCard from '@/components/WordCard.vue'
 
 const wordsStore = useWordsStore()
+const feedbackStore = useFeedbackStore()
 const searchQuery = ref('')
 const selectedWord = ref(null)
 const sortBy = ref('recent') // 'recent' | 'alphabetical' | 'accuracy'
@@ -36,12 +38,21 @@ function accuracy(w) {
   return Math.round(w.stats.correctAttempts / w.stats.totalAttempts * 100) + '%'
 }
 
-function removeWord(id, e) {
+async function removeWord(word, e) {
   e.stopPropagation()
-  if (confirm('确认删除这个单词？')) {
-    wordsStore.removeWord(id)
-    if (selectedWord.value?.id === id) selectedWord.value = null
-  }
+  const confirmed = await feedbackStore.requestConfirm({
+    title: '删除单词',
+    message: `确认删除 “${word.word}” 吗？删除后将从当前词库中移除。`,
+    confirmText: '确认删除',
+    cancelText: '暂不删除',
+    tone: 'danger'
+  })
+
+  if (!confirmed) return
+
+  wordsStore.removeWord(word.id)
+  if (selectedWord.value?.id === word.id) selectedWord.value = null
+  feedbackStore.success(`已删除单词 “${word.word}”`, '词库已更新')
 }
 
 const weakCount = computed(() =>
@@ -122,7 +133,7 @@ const weakCount = computed(() =>
             </div>
             <div class="word-side">
               <span class="tag" :class="w.stats.totalAttempts ? 'tag-warning' : ''">{{ accuracy(w) }}</span>
-              <button class="icon-btn" @click="removeWord(w.id, $event)" title="删除">×</button>
+              <button class="icon-btn" @click="removeWord(w, $event)" title="删除">×</button>
             </div>
           </div>
           <div v-if="selectedWord?.id === w.id" class="word-detail">

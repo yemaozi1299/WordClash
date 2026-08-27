@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import { useArticlesStore } from '@/stores/articles.js'
 import { useWordsStore } from '@/stores/words.js'
+import { useFeedbackStore } from '@/stores/feedback.js'
 import {
   analyzeArticle,
   translateParagraph,
@@ -14,6 +15,7 @@ const ANALYSIS_CONCURRENCY = 3
 
 const articlesStore = useArticlesStore()
 const wordsStore = useWordsStore()
+const feedbackStore = useFeedbackStore()
 
 // 导入区
 const inputTitle = ref('')
@@ -254,9 +256,19 @@ function selectArticle(id) {
   syncSelectionFromArticle(article)
 }
 
-function deleteArticle(id, event) {
+async function deleteArticle(id, event) {
   event.stopPropagation()
-  if (!confirm('确定删除这篇文章？')) return
+
+  const article = articlesStore.getArticleById(id)
+  const confirmed = await feedbackStore.requestConfirm({
+    title: '删除文章',
+    message: `确认删除 “${article?.title || '未命名文章'}” 吗？删除后这篇文章的解析结果也会一起移除。`,
+    confirmText: '确认删除',
+    cancelText: '保留文章',
+    tone: 'danger'
+  })
+
+  if (!confirmed) return
 
   if (analyzingId.value === id) {
     analyzingId.value = null
@@ -266,6 +278,8 @@ function deleteArticle(id, event) {
   if (currentId.value === id) {
     currentId.value = null
   }
+
+  feedbackStore.success(`已删除文章 “${article?.title || '未命名文章'}”`, '阅读记录已更新')
 }
 
 function sentenceBreakdownsForParagraph(index) {
@@ -807,7 +821,7 @@ function closeWordPopup() {
 
 .history-item:hover,
 .history-item.active {
-  border-color: rgba(61, 110, 232, 0.35);
+  border-color: var(--color-primary-soft);
   background: var(--color-primary-light);
 }
 
@@ -920,7 +934,7 @@ function closeWordPopup() {
 .article-block {
   padding: 20px;
   border-radius: 22px;
-  background: rgba(255, 255, 255, 0.76);
+  background: rgba(255, 255, 255, 0.84);
   border: 1px solid var(--color-border);
 }
 
@@ -942,7 +956,7 @@ function closeWordPopup() {
 
 .word-token.highlighted {
   background: var(--color-warning-light);
-  border-bottom: 2px solid rgba(209, 162, 53, 0.7);
+  border-bottom: 2px solid var(--color-warning);
   padding: 0 1px;
 }
 
@@ -954,8 +968,8 @@ function closeWordPopup() {
 .article-translation {
   padding: 14px 16px;
   border-radius: 16px;
-  background: #fffdf4;
-  border: 1px solid #f1e4ad;
+  background: var(--color-panel-info-bg);
+  border: 1px solid var(--color-panel-info-border);
 }
 
 .article-breakdowns {
@@ -967,8 +981,8 @@ function closeWordPopup() {
 .breakdown-card {
   padding: 14px 16px;
   border-radius: 16px;
-  background: #f4f8ff;
-  border: 1px solid #d9e5fb;
+  background: var(--color-panel-accent-bg);
+  border: 1px solid var(--color-panel-accent-border);
 }
 
 .sentence-original {
@@ -999,7 +1013,7 @@ function closeWordPopup() {
 }
 
 .word-selection-item.checked {
-  border-color: rgba(61, 110, 232, 0.3);
+  border-color: var(--color-primary-soft);
   background: var(--color-primary-light);
 }
 
@@ -1045,20 +1059,20 @@ function closeWordPopup() {
   margin-bottom: 8px;
   border-radius: 14px;
   border: 1px solid var(--color-border);
-  background: #fff;
+  background: var(--color-surface);
   cursor: pointer;
   font-size: 14px;
 }
 
 .quiz-option.correct {
   background: var(--color-success-light);
-  border-color: rgba(38, 153, 108, 0.25);
+  border-color: var(--color-success-soft);
   color: var(--color-success);
 }
 
 .quiz-option.wrong {
   background: var(--color-danger-light);
-  border-color: rgba(217, 81, 81, 0.25);
+  border-color: var(--color-danger-soft);
   color: var(--color-danger);
 }
 
@@ -1097,7 +1111,8 @@ function closeWordPopup() {
   width: min(460px, 100%);
   padding: 22px;
   border-radius: 24px;
-  background: #fff;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   box-shadow: var(--shadow-lg);
   position: relative;
 }

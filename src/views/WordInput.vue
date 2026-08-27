@@ -211,7 +211,7 @@ function removeWord(id, e) {
 
 .success-card {
   padding: 18px;
-  border: 1px solid rgba(38, 153, 108, 0.18);
+  border: 1px solid var(--color-success-soft);
   border-radius: var(--radius);
   background: linear-gradient(180deg, rgba(237, 249, 243, 0.9), rgba(255, 255, 255, 0.95));
 }
@@ -319,7 +319,7 @@ function removeWord(id, e) {
   height: 34px;
   border: none;
   border-radius: 12px;
-  background: #fff;
+  background: var(--color-surface);
   color: var(--color-text-secondary);
   cursor: pointer;
   font-size: 20px;
