@@ -127,21 +127,23 @@ async function handleImport(event) {
   left: 0;
   width: var(--sidebar-width);
   height: 100vh;
-  padding: 22px 18px;
+  padding: 24px 18px;
   display: flex;
   flex-direction: column;
   gap: 18px;
   background: linear-gradient(180deg, var(--color-sidebar-bg), var(--color-sidebar-bg-alt));
   color: var(--color-sidebar-text);
   z-index: 20;
-  box-shadow: 18px 0 36px rgba(10, 18, 34, 0.18);
+  border-right: 1px solid var(--color-sidebar-border);
+  box-shadow: 18px 0 40px rgba(35, 31, 26, 0.06);
+  backdrop-filter: blur(18px);
 }
 
 .sidebar-brand {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 6px 8px;
+  padding: 6px 8px 10px;
 }
 
 .brand-badge {
@@ -154,8 +156,8 @@ async function handleImport(event) {
   color: #fff;
   font-size: 15px;
   font-weight: 800;
-  letter-spacing: 0.06em;
-  box-shadow: 0 10px 22px rgba(125, 162, 255, 0.25);
+  letter-spacing: 0.12em;
+  box-shadow: 0 10px 20px rgba(141, 92, 47, 0.18);
 }
 
 .brand-copy {
@@ -165,8 +167,10 @@ async function handleImport(event) {
 }
 
 .brand-text {
-  font-size: 19px;
-  font-weight: 700;
+  font-size: 20px;
+  font-weight: 600;
+  font-family: var(--font-family-display);
+  letter-spacing: -0.03em;
 }
 
 .brand-subtitle {
@@ -199,12 +203,15 @@ async function handleImport(event) {
   border-radius: 18px;
   background: var(--color-sidebar-surface);
   border: 1px solid var(--color-sidebar-border);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 .summary-value {
   display: block;
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 600;
+  font-family: var(--font-family-display);
+  letter-spacing: -0.03em;
 }
 
 .summary-label {
@@ -232,19 +239,18 @@ async function handleImport(event) {
   color: var(--color-sidebar-text);
   font-size: 14px;
   transition: all 0.18s ease;
-  border: 1px solid transparent;
+  border: 1px solid var(--color-sidebar-border);
+  background: transparent;
 }
 
 .nav-item:hover {
   background: var(--color-sidebar-surface-hover);
-  color: #fff;
 }
 
 .nav-item.active {
   background: var(--color-sidebar-active);
-  color: #fff;
-  border-color: rgba(126, 162, 255, 0.24);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  border-color: rgba(141, 92, 47, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
 }
 
 .nav-icon {
@@ -258,6 +264,7 @@ async function handleImport(event) {
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
+  color: var(--color-primary);
 }
 
 .nav-copy {
@@ -276,6 +283,15 @@ async function handleImport(event) {
   color: var(--color-sidebar-text-muted);
 }
 
+.nav-item.active .nav-label,
+.nav-item.active .nav-icon {
+  color: var(--color-primary);
+}
+
+.nav-item.active .nav-caption {
+  color: var(--color-text-secondary);
+}
+
 .sidebar-bottom {
   margin-top: auto;
 }
@@ -285,6 +301,7 @@ async function handleImport(event) {
   border-radius: 22px;
   background: var(--color-sidebar-surface);
   border: 1px solid var(--color-sidebar-border);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42);
 }
 
 .sync-desc {
@@ -303,10 +320,10 @@ async function handleImport(event) {
 
 .sync-btn {
   min-height: 42px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--color-sidebar-border);
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.06);
-  color: #fff;
+  background: rgba(255, 253, 249, 0.84);
+  color: var(--color-text);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -320,6 +337,7 @@ async function handleImport(event) {
 .sync-btn-primary {
   background: var(--color-sidebar-brand);
   border-color: transparent;
+  color: #fff;
 }
 
 .sync-message {
