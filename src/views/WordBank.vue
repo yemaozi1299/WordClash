@@ -163,7 +163,7 @@ const weakCount = computed(() =>
 }
 
 .word-row {
-  background: rgba(255, 255, 255, 0.82);
+  background: var(--color-surface-glass);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   cursor: pointer;

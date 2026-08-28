@@ -1,31 +1,10 @@
-const LEGACY_WORDS_KEY = 'wordmatch-words'
-const LEGACY_ARTICLES_KEY = 'wordclash-articles'
-const APP_DATA_KEY = 'wordclash-user-data'
-const APP_DATA_VERSION = 1
-
-function createEmptyAppData() {
-  return {
-    version: APP_DATA_VERSION,
-    exportedAt: null,
-    words: [],
-    articles: []
-  }
-}
-
-function normalizeAppData(data) {
-  if (!data || typeof data !== 'object') {
-    return createEmptyAppData()
-  }
-
-  const base = createEmptyAppData()
-  return {
-    ...base,
-    ...data,
-    version: APP_DATA_VERSION,
-    words: Array.isArray(data.words) ? data.words : [],
-    articles: Array.isArray(data.articles) ? data.articles : []
-  }
-}
+import {
+  LEGACY_WORDS_KEY,
+  LEGACY_ARTICLES_KEY,
+  APP_DATA_KEY,
+  createEmptyAppData,
+  normalizeAppData
+} from '@/services/storage-schema.js'
 
 function loadLegacyData() {
   let words = []

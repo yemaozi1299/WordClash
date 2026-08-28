@@ -93,23 +93,23 @@ function toastClass(type) {
 }
 
 .toast-success {
-  border-color: rgba(38, 153, 108, 0.2);
-  background: linear-gradient(180deg, rgba(237, 249, 243, 0.95), rgba(255, 255, 255, 0.98));
+  border-color: var(--color-success-border-soft);
+  background: linear-gradient(180deg, var(--color-success-light), var(--color-surface));
 }
 
 .toast-error {
-  border-color: rgba(217, 81, 81, 0.2);
-  background: linear-gradient(180deg, rgba(255, 241, 241, 0.95), rgba(255, 255, 255, 0.98));
+  border-color: var(--color-danger-border-soft);
+  background: linear-gradient(180deg, var(--color-danger-light), var(--color-surface));
 }
 
 .toast-warning {
-  border-color: rgba(209, 162, 53, 0.2);
-  background: linear-gradient(180deg, rgba(255, 248, 232, 0.96), rgba(255, 255, 255, 0.98));
+  border-color: var(--color-warning-border-soft);
+  background: linear-gradient(180deg, var(--color-warning-light), var(--color-surface));
 }
 
 .toast-info {
-  border-color: rgba(61, 110, 232, 0.2);
-  background: linear-gradient(180deg, rgba(237, 243, 255, 0.95), rgba(255, 255, 255, 0.98));
+  border-color: var(--color-accent-soft);
+  background: linear-gradient(180deg, var(--color-accent-light), var(--color-surface));
 }
 
 @media (max-width: 900px) {

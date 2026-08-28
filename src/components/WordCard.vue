@@ -50,7 +50,7 @@ defineEmits(['close'])
 
 <style scoped>
 .word-card {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(249, 251, 255, 0.98));
+  background: linear-gradient(180deg, var(--color-surface), var(--color-surface-alt));
   border: 1px solid var(--color-border);
   border-radius: 20px;
   padding: 22px;

@@ -3,10 +3,10 @@ import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useWordsStore } from '@/stores/words.js'
 import { useArticlesStore } from '@/stores/articles.js'
+import { applyImportedAppData } from '@/services/bootstrap.js'
 import {
   exportAppData,
-  readImportedAppData,
-  saveAppData
+  readImportedAppData
 } from '@/services/storage.js'
 
 const route = useRoute()
@@ -46,9 +46,7 @@ async function handleImport(event) {
 
   try {
     const imported = await readImportedAppData(file)
-    wordsStore.replaceWords(imported.words, false)
-    articlesStore.replaceArticles(imported.articles, false)
-    saveAppData(imported)
+    applyImportedAppData(imported)
     syncMessage.value = `已导入 ${imported.words.length} 个单词、${imported.articles.length} 篇文章。`
   } catch (error) {
     syncMessage.value = `导入失败：${error.message}`
@@ -153,7 +151,7 @@ async function handleImport(event) {
   display: grid;
   place-items: center;
   background: var(--color-sidebar-brand);
-  color: #fff;
+  color: var(--color-on-dark);
   font-size: 15px;
   font-weight: 800;
   letter-spacing: 0.12em;
@@ -249,7 +247,7 @@ async function handleImport(event) {
 
 .nav-item.active {
   background: var(--color-sidebar-active);
-  border-color: rgba(141, 92, 47, 0.22);
+  border-color: var(--color-primary-border-soft);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
 }
 
@@ -322,7 +320,7 @@ async function handleImport(event) {
   min-height: 42px;
   border: 1px solid var(--color-sidebar-border);
   border-radius: 14px;
-  background: rgba(255, 253, 249, 0.84);
+  background: var(--color-surface-glass);
   color: var(--color-text);
   font-size: 14px;
   font-weight: 600;
@@ -337,7 +335,7 @@ async function handleImport(event) {
 .sync-btn-primary {
   background: var(--color-sidebar-brand);
   border-color: transparent;
-  color: #fff;
+  color: var(--color-on-dark);
 }
 
 .sync-message {

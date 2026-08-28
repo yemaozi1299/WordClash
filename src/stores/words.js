@@ -17,13 +17,23 @@ export const useWordsStore = defineStore('words', () => {
   function init(force = false) {
     if (initialized.value && !force) return
 
-    const saved = loadAppData()
-    words.value = saved.words
-    initialized.value = true
+    hydrate(loadAppData().words, { force: true })
   }
 
-  function persist() {
+  function persistWords() {
     updateAppData({ words: words.value })
+  }
+
+  function hydrate(nextWords, options = {}) {
+    const { force = false, persist = false } = options
+    if (initialized.value && !force) return
+
+    words.value = Array.isArray(nextWords) ? nextWords : []
+    initialized.value = true
+
+    if (persist) {
+      persistWords()
+    }
   }
 
   function addWord(wordData) {
@@ -45,7 +55,7 @@ export const useWordsStore = defineStore('words', () => {
       }
     }
     words.value.push(entry)
-    persist()
+    persistWords()
     return { existed: false, word: entry }
   }
 
@@ -61,7 +71,7 @@ export const useWordsStore = defineStore('words', () => {
     } else {
       w.stats.consecutiveCorrect = 0
     }
-    persist()
+    persistWords()
   }
 
   function getWordById(id) {
@@ -70,13 +80,14 @@ export const useWordsStore = defineStore('words', () => {
 
   function removeWord(id) {
     words.value = words.value.filter(w => w.id !== id)
-    persist()
+    persistWords()
   }
 
   function replaceWords(nextWords, persistNow = true) {
     words.value = Array.isArray(nextWords) ? nextWords : []
+    initialized.value = true
     if (persistNow) {
-      persist()
+      persistWords()
     }
   }
 
@@ -92,6 +103,7 @@ export const useWordsStore = defineStore('words', () => {
     wordCount,
     sortedByRecent,
     init,
+    hydrate,
     addWord,
     updateStats,
     getWordById,

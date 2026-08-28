@@ -53,19 +53,27 @@ onMounted(() => {
   --color-primary-dark: #744721;
   --color-primary-light: #f5ece2;
   --color-primary-soft: rgba(141, 92, 47, 0.12);
+  --color-primary-border-soft: rgba(141, 92, 47, 0.22);
   --color-accent: #335c67;
+  --color-accent-light: #edf4f3;
+  --color-accent-soft: rgba(51, 92, 103, 0.16);
   --color-success: #48815c;
   --color-success-light: #edf6ef;
   --color-success-soft: rgba(72, 129, 92, 0.14);
+  --color-success-border-soft: rgba(72, 129, 92, 0.2);
   --color-warning: #8a5d1f;
   --color-warning-light: #fcf4e8;
   --color-warning-soft: rgba(181, 135, 52, 0.14);
+  --color-warning-border-soft: rgba(181, 135, 52, 0.2);
   --color-danger: #9b3838;
   --color-danger-light: #fbefef;
   --color-danger-soft: rgba(176, 74, 74, 0.14);
+  --color-danger-border-soft: rgba(176, 74, 74, 0.2);
   --color-border: #e3dbd0;
   --color-border-strong: #d6cabd;
   --color-overlay: rgba(35, 31, 26, 0.38);
+  --color-overlay-strong: rgba(35, 31, 26, 0.48);
+  --color-on-dark: #fff;
 
   /* 侧边栏沿用同一套暖色表层语义 */
   --color-sidebar-bg: rgba(252, 250, 246, 0.88);
@@ -84,6 +92,8 @@ onMounted(() => {
   --color-panel-info-border: #ecdab6;
   --color-panel-accent-bg: #eef4f3;
   --color-panel-accent-border: #d3e1df;
+  --color-surface-glass: rgba(255, 253, 249, 0.84);
+  --color-surface-raised: rgba(255, 253, 249, 0.92);
 
   /* 尺寸令牌，风格参考 Open Props */
   --space-1: 4px;
@@ -233,7 +243,7 @@ body {
   padding: 22px;
   border-radius: var(--radius);
   border: 1px solid var(--color-border);
-  background: rgba(255, 253, 249, 0.92);
+  background: var(--color-surface-raised);
   box-shadow: var(--shadow-sm);
 }
 
@@ -295,7 +305,7 @@ body {
 
 .btn-primary {
   background: var(--color-primary);
-  color: #fff;
+  color: var(--color-on-dark);
   box-shadow: 0 12px 22px rgba(141, 92, 47, 0.18);
 }
 
@@ -316,12 +326,12 @@ body {
 
 .btn-danger {
   background: var(--color-danger);
-  color: #fff;
-  box-shadow: 0 12px 22px rgba(220, 76, 100, 0.22);
+  color: var(--color-on-dark);
+  box-shadow: 0 12px 22px rgba(155, 56, 56, 0.2);
 }
 
 .btn-danger:hover:not(:disabled) {
-  background: #c93b55;
+  background: #842d2d;
 }
 
 .btn-ghost {
@@ -410,7 +420,7 @@ body {
   text-align: center;
   border: 1px dashed var(--color-border-strong);
   border-radius: var(--radius);
-  background: rgba(255, 253, 249, 0.78);
+  background: var(--color-surface-glass);
   color: var(--color-text-secondary);
 }
 

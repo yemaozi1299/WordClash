@@ -4,6 +4,13 @@ import { useArticlesStore } from '@/stores/articles.js'
 import { useWordsStore } from '@/stores/words.js'
 import { useFeedbackStore } from '@/stores/feedback.js'
 import {
+  splitParagraphs,
+  splitSentences,
+  tokenizeArticleText,
+  mapWithConcurrency,
+  findReusableWordData
+} from '@/services/article-reader.js'
+import {
   analyzeArticle,
   translateParagraph,
   breakdownSentence,
@@ -65,40 +72,6 @@ const quizResult = computed(() => {
   return { correct, total: current.value.quiz.questions.length }
 })
 
-function splitParagraphs(content) {
-  return content.split(/\n+/).map(item => item.trim()).filter(Boolean)
-}
-
-function splitSentences(text) {
-  if (!text) return []
-
-  const protectedText = text
-    .replace(/\b(Mr|Mrs|Ms|Dr|Prof|Sr|Jr|vs|etc)\./g, '$1<prd>')
-    .replace(/\b(e\.g|i\.e)\./g, match => match.replace(/\./g, '<prd>'))
-    .replace(/(\d)\.(\d)/g, '$1<prd>$2')
-
-  return protectedText
-    .split(/(?<=[.!?])\s+/)
-    .map(item => item.replace(/<prd>/g, '.').trim())
-    .filter(Boolean)
-}
-
-function tokenize(text) {
-  return text
-    .split(/([a-zA-Z][a-zA-Z'-]*)/g)
-    .filter(Boolean)
-    .map(part => (/^[a-zA-Z][a-zA-Z'-]*$/.test(part)
-      ? { type: 'word', text: part }
-      : { type: 'text', text: part }))
-}
-
-async function mapWithConcurrency(items, fn, concurrency = ANALYSIS_CONCURRENCY) {
-  for (let i = 0; i < items.length; i += concurrency) {
-    const batch = items.slice(i, i + concurrency)
-    await Promise.all(batch.map((item, index) => fn(item, i + index)))
-  }
-}
-
 function resetViewState() {
   selectedWords.value = []
   quizAnswers.value = {}
@@ -120,37 +93,12 @@ function shouldSyncProgress(progressCount, totalCount, interval) {
   return progressCount % interval === 0 || progressCount >= totalCount
 }
 
-function normalizeWordDetail(wordData) {
-  if (!wordData) return null
-
-  return {
-    word: wordData.word,
-    phonetic: wordData.phonetic || '',
-    meanings: Array.isArray(wordData.meanings) ? wordData.meanings : [],
-    exampleSentences: Array.isArray(wordData.exampleSentences) ? wordData.exampleSentences : [],
-    synonyms: Array.isArray(wordData.synonyms) ? wordData.synonyms : [],
-    etymology: wordData.etymology || '',
-    memoryTip: wordData.memoryTip || ''
-  }
-}
-
 function getReusableWordData(word, article = current.value) {
-  const lower = word.toLowerCase()
-
-  if (article?.wordDetails?.[lower]) {
-    return article.wordDetails[lower]
-  }
-
-  if (wordCache.value[lower]) {
-    return wordCache.value[lower]
-  }
-
-  const existingWord = wordsStore.words.find(item => item.word.toLowerCase() === lower)
-  if (existingWord) {
-    return normalizeWordDetail(existingWord)
-  }
-
-  return null
+  return findReusableWordData(word, {
+    article,
+    wordCache: wordCache.value,
+    words: wordsStore.words
+  })
 }
 
 async function handleFile(event) {
@@ -222,7 +170,7 @@ async function runAnalysis(id) {
           } catch {
             // 单个生词失败时保留整体流程
           }
-        })
+        }, ANALYSIS_CONCURRENCY)
       }
 
       persistStage(id, { analysis, wordDetails })
@@ -251,7 +199,7 @@ async function runAnalysis(id) {
       if (shouldSyncProgress(translated, rawParagraphs.length, TRANSLATION_SYNC_INTERVAL)) {
         articlesStore.updateArticle(id, { translations }, { persist: false })
       }
-    })
+    }, ANALYSIS_CONCURRENCY)
     persistStage(id, { translations })
 
     if (analyzingId.value !== id) return
@@ -282,7 +230,7 @@ async function runAnalysis(id) {
       if (shouldSyncProgress(parsedSentences, allSentences.length, BREAKDOWN_SYNC_INTERVAL)) {
         articlesStore.updateArticle(id, { sentenceBreakdowns }, { persist: false })
       }
-    })
+    }, ANALYSIS_CONCURRENCY)
     persistStage(id, { sentenceBreakdowns })
   } catch (error) {
     importError.value = `解析失败：${error.message}`
@@ -666,7 +614,7 @@ function closeWordPopup() {
           <div class="article-body">
             <article v-for="(paragraph, index) in paragraphs" :key="index" class="article-block">
               <p class="article-text">
-                <span v-for="(token, tokenIndex) in tokenize(paragraph)" :key="`${index}-${tokenIndex}`">
+                <span v-for="(token, tokenIndex) in tokenizeArticleText(paragraph)" :key="`${index}-${tokenIndex}`">
                   <span
                     v-if="token.type === 'word'"
                     class="word-token"
@@ -865,7 +813,7 @@ function closeWordPopup() {
 
 .history-item:hover,
 .history-item.active {
-  border-color: var(--color-primary-soft);
+  border-color: var(--color-primary-border-soft);
   background: var(--color-primary-light);
 }
 
@@ -902,7 +850,9 @@ function closeWordPopup() {
 .reader-title {
   margin-top: 6px;
   font-size: 28px;
-  font-weight: 700;
+  font-weight: 600;
+  font-family: var(--font-family-display);
+  letter-spacing: -0.03em;
   color: var(--color-text);
 }
 
@@ -978,7 +928,7 @@ function closeWordPopup() {
 .article-block {
   padding: 20px;
   border-radius: 22px;
-  background: rgba(255, 255, 255, 0.84);
+  background: var(--color-surface-glass);
   border: 1px solid var(--color-border);
 }
 
@@ -1057,7 +1007,7 @@ function closeWordPopup() {
 }
 
 .word-selection-item.checked {
-  border-color: var(--color-primary-soft);
+  border-color: var(--color-primary-border-soft);
   background: var(--color-primary-light);
 }
 
@@ -1110,13 +1060,13 @@ function closeWordPopup() {
 
 .quiz-option.correct {
   background: var(--color-success-light);
-  border-color: var(--color-success-soft);
+  border-color: var(--color-success-border-soft);
   color: var(--color-success);
 }
 
 .quiz-option.wrong {
   background: var(--color-danger-light);
-  border-color: var(--color-danger-soft);
+  border-color: var(--color-danger-border-soft);
   color: var(--color-danger);
 }
 
@@ -1148,7 +1098,7 @@ function closeWordPopup() {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: rgba(9, 18, 32, 0.42);
+  background: var(--color-overlay-strong);
 }
 
 .word-popup {

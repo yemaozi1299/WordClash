@@ -18,12 +18,23 @@ export const useArticlesStore = defineStore('articles', () => {
   function init(force = false) {
     if (initialized.value && !force) return
 
-    articles.value = loadAppData().articles
-    initialized.value = true
+    hydrate(loadAppData().articles, { force: true })
   }
 
-  function persist() {
+  function persistArticles() {
     updateAppData({ articles: articles.value })
+  }
+
+  function hydrate(nextArticles, options = {}) {
+    const { force = false, persist = false } = options
+    if (initialized.value && !force) return
+
+    articles.value = Array.isArray(nextArticles) ? nextArticles : []
+    initialized.value = true
+
+    if (persist) {
+      persistArticles()
+    }
   }
 
   function addArticle({ title, content }) {
@@ -45,7 +56,7 @@ export const useArticlesStore = defineStore('articles', () => {
     if (articles.value.length > MAX_ARTICLES) {
       articles.value = articles.value.slice(0, MAX_ARTICLES)
     }
-    persist()
+    persistArticles()
     return entry
   }
 
@@ -58,19 +69,20 @@ export const useArticlesStore = defineStore('articles', () => {
     if (!a) return
     Object.assign(a, patch)
     if (options.persist !== false) {
-      persist()
+      persistArticles()
     }
   }
 
   function removeArticle(id) {
     articles.value = articles.value.filter(a => a.id !== id)
-    persist()
+    persistArticles()
   }
 
   function replaceArticles(nextArticles, persistNow = true) {
     articles.value = Array.isArray(nextArticles) ? nextArticles : []
+    initialized.value = true
     if (persistNow) {
-      persist()
+      persistArticles()
     }
   }
 
@@ -79,7 +91,7 @@ export const useArticlesStore = defineStore('articles', () => {
   }
 
   function persistNow() {
-    persist()
+    persistArticles()
   }
 
   return {
@@ -89,6 +101,7 @@ export const useArticlesStore = defineStore('articles', () => {
     articleCount,
     sortedByRecent,
     init,
+    hydrate,
     addArticle,
     getArticleById,
     updateArticle,

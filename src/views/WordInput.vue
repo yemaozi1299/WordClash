@@ -213,7 +213,7 @@ function removeWord(id, e) {
   padding: 18px;
   border: 1px solid var(--color-success-soft);
   border-radius: var(--radius);
-  background: linear-gradient(180deg, rgba(237, 249, 243, 0.9), rgba(255, 255, 255, 0.95));
+  background: linear-gradient(180deg, var(--color-success-light), var(--color-surface));
 }
 
 .success-head {
