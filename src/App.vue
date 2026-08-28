@@ -3,15 +3,10 @@ import { onMounted } from 'vue'
 import SideNav from '@/components/SideNav.vue'
 import AppToast from '@/components/AppToast.vue'
 import AppConfirmDialog from '@/components/AppConfirmDialog.vue'
-import { useWordsStore } from '@/stores/words.js'
-import { useArticlesStore } from '@/stores/articles.js'
-
-const wordsStore = useWordsStore()
-const articlesStore = useArticlesStore()
+import { initializeAppStores } from '@/services/bootstrap.js'
 
 onMounted(() => {
-  wordsStore.init()
-  articlesStore.init()
+  initializeAppStores()
 })
 </script>
 

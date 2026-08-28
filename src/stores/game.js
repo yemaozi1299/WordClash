@@ -76,18 +76,26 @@ export const useGameStore = defineStore('game', () => {
     const remaining = [...pool]
 
     while (selected.length < count && remaining.length > 0) {
-      const totalScore = remaining.reduce((sum, item) => sum + item.score, 0)
-      let rand = Math.random() * totalScore
-      let i = 0
-      while (rand > 0 && i < remaining.length) {
-        rand -= remaining[i].score
-        i++
-      }
-      i = Math.max(0, i - 1)
-      selected.push(remaining[i].word)
-      remaining.splice(i, 1)
+      const pickedIndex = pickWeightedIndex(remaining)
+      selected.push(remaining[pickedIndex].word)
+      remaining.splice(pickedIndex, 1)
     }
     return selected
+  }
+
+  function pickWeightedIndex(pool) {
+    const totalScore = pool.reduce((sum, item) => sum + item.score, 0)
+    let threshold = Math.random() * totalScore
+
+    for (let index = 0; index < pool.length; index++) {
+      threshold -= pool[index].score
+      if (threshold <= 0) {
+        return index
+      }
+    }
+
+    // 兜底返回最后一个，避免浮点误差导致越界。
+    return Math.max(0, pool.length - 1)
   }
 
   function shuffle(arr) {

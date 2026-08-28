@@ -12,6 +12,9 @@ import {
 } from '@/services/deepseek.js'
 
 const ANALYSIS_CONCURRENCY = 3
+const PREPARSE_SYNC_INTERVAL = 3
+const TRANSLATION_SYNC_INTERVAL = 2
+const BREAKDOWN_SYNC_INTERVAL = 4
 
 const articlesStore = useArticlesStore()
 const wordsStore = useWordsStore()
@@ -113,6 +116,43 @@ function persistStage(id, patch) {
   articlesStore.persistNow()
 }
 
+function shouldSyncProgress(progressCount, totalCount, interval) {
+  return progressCount % interval === 0 || progressCount >= totalCount
+}
+
+function normalizeWordDetail(wordData) {
+  if (!wordData) return null
+
+  return {
+    word: wordData.word,
+    phonetic: wordData.phonetic || '',
+    meanings: Array.isArray(wordData.meanings) ? wordData.meanings : [],
+    exampleSentences: Array.isArray(wordData.exampleSentences) ? wordData.exampleSentences : [],
+    synonyms: Array.isArray(wordData.synonyms) ? wordData.synonyms : [],
+    etymology: wordData.etymology || '',
+    memoryTip: wordData.memoryTip || ''
+  }
+}
+
+function getReusableWordData(word, article = current.value) {
+  const lower = word.toLowerCase()
+
+  if (article?.wordDetails?.[lower]) {
+    return article.wordDetails[lower]
+  }
+
+  if (wordCache.value[lower]) {
+    return wordCache.value[lower]
+  }
+
+  const existingWord = wordsStore.words.find(item => item.word.toLowerCase() === lower)
+  if (existingWord) {
+    return normalizeWordDetail(existingWord)
+  }
+
+  return null
+}
+
 async function handleFile(event) {
   const file = event.target.files?.[0]
   if (!file) return
@@ -157,6 +197,7 @@ async function runAnalysis(id) {
     const rawParagraphs = splitParagraphs(article.content)
     let analysis = article.analysis || null
     let wordDetails = article.wordDetails || {}
+    let preparedWords = 0
 
     try {
       analysis = await analyzeArticle(article.content)
@@ -166,13 +207,18 @@ async function runAnalysis(id) {
         analysisProgress.value = '正在预解析重点生词...'
         await mapWithConcurrency(analysis.rawWords, async (item) => {
           if (analyzingId.value !== id) return
+
           try {
-            const data = await parseWord(item.word)
+            const cached = getReusableWordData(item.word, article)
+            const data = cached || await parseWord(item.word)
             wordDetails = {
               ...wordDetails,
               [item.word.toLowerCase()]: data
             }
-            articlesStore.updateArticle(id, { analysis, wordDetails }, { persist: false })
+            preparedWords++
+            if (shouldSyncProgress(preparedWords, analysis.rawWords.length, PREPARSE_SYNC_INTERVAL)) {
+              articlesStore.updateArticle(id, { analysis, wordDetails }, { persist: false })
+            }
           } catch {
             // 单个生词失败时保留整体流程
           }
@@ -202,7 +248,9 @@ async function runAnalysis(id) {
 
       translated++
       analysisProgress.value = `正在翻译段落 ${Math.min(translated, rawParagraphs.length)}/${rawParagraphs.length}...`
-      articlesStore.updateArticle(id, { translations }, { persist: false })
+      if (shouldSyncProgress(translated, rawParagraphs.length, TRANSLATION_SYNC_INTERVAL)) {
+        articlesStore.updateArticle(id, { translations }, { persist: false })
+      }
     })
     persistStage(id, { translations })
 
@@ -231,7 +279,9 @@ async function runAnalysis(id) {
 
       parsedSentences++
       analysisProgress.value = `正在逐句拆解 ${Math.min(parsedSentences, allSentences.length)}/${allSentences.length}...`
-      articlesStore.updateArticle(id, { sentenceBreakdowns }, { persist: false })
+      if (shouldSyncProgress(parsedSentences, allSentences.length, BREAKDOWN_SYNC_INTERVAL)) {
+        articlesStore.updateArticle(id, { sentenceBreakdowns }, { persist: false })
+      }
     })
     persistStage(id, { sentenceBreakdowns })
   } catch (error) {
@@ -382,14 +432,8 @@ async function clickWord(word) {
 
 async function resolveWordData(word) {
   const lower = word.toLowerCase()
-
-  if (current.value?.wordDetails?.[lower]) {
-    return current.value.wordDetails[lower]
-  }
-
-  if (wordCache.value[lower]) {
-    return wordCache.value[lower]
-  }
+  const cached = getReusableWordData(word)
+  if (cached) return cached
 
   const data = await parseWord(word)
   wordCache.value = {
