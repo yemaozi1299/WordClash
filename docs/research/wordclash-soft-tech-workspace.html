@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WordClash Soft Tech Workspace</title>
+  <style>
+    :root {
+      --bg-1: #f5f7fd;
+      --bg-2: #eef3fb;
+      --surface: rgba(255, 255, 255, 0.84);
+      --surface-strong: rgba(255, 255, 255, 0.92);
+      --surface-soft: rgba(241, 246, 255, 0.82);
+      --line: rgba(204, 214, 232, 0.92);
+      --line-strong: rgba(179, 193, 220, 0.98);
+      --text-main: #172033;
+      --text-secondary: #52607a;
+      --text-muted: #74819a;
+      --blue: #4d7cfe;
+      --blue-deep: #345ee9;
+      --blue-soft: rgba(77, 124, 254, 0.1);
+      --cyan-soft: rgba(49, 166, 199, 0.1);
+      --violet-soft: rgba(113, 88, 226, 0.1);
+      --green-soft: rgba(54, 164, 112, 0.12);
+      --amber-soft: rgba(233, 171, 58, 0.16);
+      --red-soft: rgba(224, 88, 108, 0.12);
+      --shadow: 0 26px 60px rgba(23, 32, 51, 0.08);
+      --shadow-soft: 0 14px 34px rgba(23, 32, 51, 0.05);
+      --radius-xl: 30px;
+      --radius-lg: 22px;
+      --radius-md: 18px;
+      --radius-sm: 14px;
+      --font-base: Inter, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+      --max-width: 1460px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 15% 10%, rgba(77, 124, 254, 0.12), transparent 22%),
+        radial-gradient(circle at 85% 15%, rgba(49, 166, 199, 0.08), transparent 20%),
+        linear-gradient(180deg, #f6f8fd 0%, #edf2fb 100%);
+      color: var(--text-main);
+      font-family: var(--font-base);
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page {
+      width: min(100% - 40px, var(--max-width));
+      margin: 0 auto;
+      padding: 24px 0 40px;
+      display: grid;
+      grid-template-columns: 300px minmax(0, 1fr);
+      gap: 20px;
+    }
+
+    .sidebar,
+    .hero,
+    .panel,
+    .glass-card,
+    .guide-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(18px);
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 24px;
+      align-self: start;
+      padding: 22px;
+      border-radius: var(--radius-xl);
+      display: grid;
+      gap: 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-mark {
+      width: 50px;
+      height: 50px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, rgba(77, 124, 254, 0.16), rgba(49, 166, 199, 0.12), rgba(255, 255, 255, 0.92));
+      color: var(--blue-deep);
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    }
+
+    .brand-copy strong {
+      display: block;
+      font-size: 17px;
+      letter-spacing: -0.03em;
+    }
+
+    .brand-copy span,
+    .nav-item span,
+    .subcopy,
+    .meta,
+    .guide-card p,
+    .guide-card li,
+    .stat-card small,
+    .module-card p {
+      color: var(--text-secondary);
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    .section-label {
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .nav-stack,
+    .mini-stack,
+    .content,
+    .stats-grid,
+    .workspace-grid,
+    .module-grid,
+    .guide-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .nav-item,
+    .mini-card {
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(204, 214, 232, 0.72);
+      background: rgba(255, 255, 255, 0.66);
+    }
+
+    .nav-item strong,
+    .mini-card strong,
+    .module-card strong,
+    .guide-card strong {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+
+    .nav-item.active {
+      background: linear-gradient(135deg, rgba(77, 124, 254, 0.12), rgba(49, 166, 199, 0.06), rgba(255, 255, 255, 0.82));
+      border-color: rgba(77, 124, 254, 0.22);
+    }
+
+    .content {
+      gap: 20px;
+    }
+
+    .hero {
+      border-radius: 34px;
+      padding: 28px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) 360px;
+      gap: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 0 12px;
+      border-radius: 999px;
+      background: var(--blue-soft);
+      color: var(--blue-deep);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      letter-spacing: -0.04em;
+    }
+
+    h1 {
+      margin-top: 16px;
+      max-width: 820px;
+      font-size: clamp(36px, 4.4vw, 52px);
+      line-height: 1.02;
+      text-wrap: pretty;
+    }
+
+    .hero p {
+      margin: 16px 0 0;
+      max-width: 760px;
+      color: var(--text-secondary);
+      font-size: 16px;
+      line-height: 1.9;
+      text-wrap: pretty;
+    }
+
+    .hero-side {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .glass-card {
+      padding: 16px;
+      border-radius: 20px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(240, 246, 255, 0.72));
+    }
+
+    .glass-card strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+
+    .glass-card span {
+      color: var(--text-secondary);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    .stats-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .stat-card {
+      padding: 20px;
+      border-radius: 22px;
+      background: var(--surface-strong);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .stat-card span {
+      display: block;
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+
+    .stat-card strong {
+      display: block;
+      margin: 8px 0 8px;
+      font-size: 34px;
+      letter-spacing: -0.04em;
+    }
+
+    .workspace-grid {
+      grid-template-columns: minmax(0, 1.1fr) 380px;
+    }
+
+    .panel {
+      border-radius: var(--radius-xl);
+      padding: 24px;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .panel-head h2 {
+      font-size: 24px;
+    }
+
+    .panel-head h3 {
+      font-size: 18px;
+    }
+
+    .panel-head p,
+    .hint,
+    .field-note,
+    .module-card li {
+      margin: 8px 0 0;
+      color: var(--text-secondary);
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 0 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .badge-blue {
+      background: var(--blue-soft);
+      color: var(--blue-deep);
+    }
+
+    .badge-cyan {
+      background: var(--cyan-soft);
+      color: #2a7287;
+    }
+
+    .badge-violet {
+      background: var(--violet-soft);
+      color: #5d4abe;
+    }
+
+    .field-stack,
+    .task-stack {
+      display: grid;
+      gap: 14px;
+    }
+
+    .field-card,
+    .task-card,
+    .module-card,
+    .guide-card {
+      padding: 16px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.82);
+    }
+
+    .field-label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .input,
+    .textarea {
+      width: 100%;
+      border-radius: 15px;
+      border: 1px solid rgba(77, 124, 254, 0.18);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(245, 248, 255, 0.86));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 0 0 4px rgba(77, 124, 254, 0.05);
+      color: var(--text-main);
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    .input {
+      min-height: 48px;
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+    }
+
+    .textarea {
+      min-height: 118px;
+      padding: 14px;
+    }
+
+    .task-card {
+      display: grid;
+      gap: 10px;
+    }
+
+    .task-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .task-head strong {
+      font-size: 15px;
+    }
+
+    .module-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .module-card {
+      border-radius: 20px;
+    }
+
+    .module-card ul {
+      margin: 10px 0 0;
+      padding-left: 18px;
+    }
+
+    .guide-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .guide-card {
+      border-radius: 22px;
+    }
+
+    .guide-card ul {
+      margin: 10px 0 0;
+      padding-left: 18px;
+    }
+
+    .footer-note {
+      padding: 18px 22px;
+      border-radius: 22px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.72);
+      color: var(--text-secondary);
+      font-size: 13px;
+      line-height: 1.9;
+    }
+
+    @media (max-width: 1180px) {
+      .page,
+      .hero,
+      .workspace-grid,
+      .stats-grid,
+      .module-grid,
+      .guide-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: static;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .page {
+        width: min(100% - 20px, var(--max-width));
+        padding-top: 16px;
+      }
+
+      .hero,
+      .panel,
+      .sidebar {
+        padding: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!--
+    设计假设：
+    1. Soft Tech Workspace 保留工具台结构，但让整体层次更柔和、更现代。
+    2. 它比 Radix Quiet 更有产品气质，也更适合做成统一全局风格。
+    3. 这版允许更细腻的高光、浅渐层和玻璃感，但依然避免滑回过度装饰。
+  -->
+  <div class="page">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">WC</div>
+        <div class="brand-copy">
+          <strong>Soft Tech Workspace</strong>
+          <span>更像现代产品工作台的方向稿，强调柔和层次、轻科技感和更完整的产品气质。</span>
+        </div>
+      </div>
+
+      <div class="nav-stack">
+        <div class="section-label">Workspace Flow</div>
+        <div class="nav-item active">
+          <strong>学习首页</strong>
+          <span>保留工作台结构，但让视觉触感更轻、更现代。</span>
+        </div>
+        <div class="nav-item">
+          <strong>文章与任务</strong>
+          <span>任务、阅读、入库和状态反馈被组织成更像产品模块的面板。</span>
+        </div>
+        <div class="nav-item">
+          <strong>组件基线</strong>
+          <span>适合回灌为全局风格的按钮、卡片、列表和提示层。</span>
+        </div>
+      </div>
+
+      <div class="mini-stack">
+        <div class="section-label">Mood</div>
+        <div class="mini-card">
+          <strong>现代但不夸张</strong>
+          <span>允许轻微高光和柔和渐层，但不用大面积炫技背景。</span>
+        </div>
+        <div class="mini-card">
+          <strong>产品感更强</strong>
+          <span>更适合整个项目统一升级，而不只是某个内容页局部优化。</span>
+        </div>
+        <div class="mini-card">
+          <strong>风险控制</strong>
+          <span>如果后续加太多光效和颜色，就会重新回到装饰感过强的问题。</span>
+        </div>
+      </div>
+    </aside>
+
+    <main class="content">
+      <section class="hero">
+        <div>
+          <span class="eyebrow">Direction 03 / Soft Tech Workspace</span>
+          <h1>让 WordClash 更像一个完成度更高的产品，而不只是功能已经能跑的工具集合</h1>
+          <p>
+            这条方向保留工作台结构、信息面板和明确的操作感，
+            但把整体气质往更柔和、更现代、更有产品完成度的方向推。
+            它比 `Radix Quiet` 更有存在感，也更适合当整站统一风格；代价是要更小心控制装饰分寸。
+          </p>
+        </div>
+
+        <div class="hero-side">
+          <div class="glass-card">
+            <strong>关键词</strong>
+            <span>轻科技、柔和玻璃感、产品完成度、现代工作台。</span>
+          </div>
+          <div class="glass-card">
+            <strong>适合的页面</strong>
+            <span>主页、录入页、词库、分析页，尤其适合做全局风格升级。</span>
+          </div>
+          <div class="glass-card">
+            <strong>注意事项</strong>
+            <span>高光和渐层只能点到为止，不能重新把侧边栏和卡片做成视觉主角。</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="stats-grid">
+        <article class="stat-card">
+          <span>本周学习</span>
+          <strong>37</strong>
+          <small>数字、标签和背景层次更完整，但依然保持良好的信息可读性。</small>
+        </article>
+        <article class="stat-card">
+          <span>待复习单词</span>
+          <strong>14</strong>
+          <small>状态模块像产品组件，而不是单纯的文字块。</small>
+        </article>
+        <article class="stat-card">
+          <span>精读文章</span>
+          <strong>12</strong>
+          <small>适合配合阅读模块、任务模块和趋势模块一起出现。</small>
+        </article>
+        <article class="stat-card">
+          <span>连续练习</span>
+          <strong>8d</strong>
+          <small>允许更明确的产品仪表盘语气，但不过度技术炫耀。</small>
+        </article>
+      </section>
+
+      <section class="workspace-grid">
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>主工作区</h2>
+              <p>这版的录入与阅读会更像真正的产品面板：有更明确的层级、有节奏地组织任务，但仍然保持干净。</p>
+            </div>
+            <span class="badge badge-blue">Workspace Core</span>
+          </div>
+
+          <div class="field-stack">
+            <div class="field-card">
+              <span class="field-label">快速录入</span>
+              <div class="input">resilient</div>
+              <div class="field-note">聚焦态更柔和，输入区像“被激活的模块”，而不是单纯的矩形输入框。</div>
+            </div>
+
+            <div class="field-card">
+              <span class="field-label">AI 解析摘要</span>
+              <div class="textarea">adj. 有韧性的；恢复力强的。例句建议保留在结果面板中，用户确认后再入库。这里的文案区更像一个产品组件，而不是简单的文字区块。</div>
+            </div>
+
+            <div class="module-grid">
+              <article class="module-card">
+                <strong>主释义</strong>
+                <p>有韧性的；能在压力后恢复。</p>
+              </article>
+              <article class="module-card">
+                <strong>记忆提示</strong>
+                <p>强调“被压弯但很快恢复”的画面感。</p>
+              </article>
+              <article class="module-card">
+                <strong>当前状态</strong>
+                <p>音标已解析，例句待确认，入库前可继续编辑。</p>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <aside class="panel">
+          <div class="panel-head">
+            <div>
+              <h3>任务与阅读协同</h3>
+              <p>这列更像产品仪表盘，用来承接任务流、阅读进度和生词操作。</p>
+            </div>
+            <span class="badge badge-cyan">Task Rail</span>
+          </div>
+
+          <div class="task-stack">
+            <article class="task-card">
+              <div class="task-head">
+                <strong>文章精读进度</strong>
+                <span class="badge badge-violet">4 / 6</span>
+              </div>
+              <div class="hint">摘要已完成，段落翻译进行中。整块看起来更像真实产品里的任务卡。</div>
+            </article>
+
+            <article class="task-card">
+              <div class="task-head">
+                <strong>待加入词库</strong>
+                <span class="badge badge-blue">12 个生词</span>
+              </div>
+              <div class="hint">状态提示可以更明确，但不再做成沉重的系统警报样式。</div>
+            </article>
+
+            <article class="task-card">
+              <div class="task-head">
+                <strong>最近练习反馈</strong>
+                <span class="badge badge-cyan">准确率 82%</span>
+              </div>
+              <div class="hint">分析信息和任务信息共用一套卡片体系，产品气质会更统一。</div>
+            </article>
+          </div>
+        </aside>
+      </section>
+
+      <section class="guide-grid">
+        <article class="guide-card">
+          <strong>为什么这版像“完整产品”</strong>
+          <p>因为它不只是收口了颜色和边框，还让统计、任务、录入、阅读这些模块开始有统一的产品语言。</p>
+        </article>
+        <article class="guide-card">
+          <strong>这版最适合落在哪</strong>
+          <p>如果你准备把整个项目统一升级，它会比 `Editorial Light` 更容易作为全站默认方案。</p>
+        </article>
+        <article class="guide-card">
+          <strong>最需要守住的边界</strong>
+          <ul>
+            <li>玻璃感只能轻，不要做成高饱和霓虹。</li>
+            <li>渐层只能做表层气氛，不能抢内容。</li>
+            <li>状态色仍然必须服务信息，不用来铺满大块背景。</li>
+          </ul>
+        </article>
+      </section>
+
+      <div class="footer-note">
+        `Soft Tech Workspace` 是三条方向里最适合整站统一升级的一版。
+        它在“更像成熟产品”和“不要太装饰”之间做平衡，如果你后面要直接改项目，我会优先推荐这版或 `Radix Quiet` 作为主线。
+      </div>
+    </main>
+  </div>
+</body>
+</html>

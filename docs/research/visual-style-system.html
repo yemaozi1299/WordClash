@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WordClash Visual Style System</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --color-bg: #fcfcfd;
+      --color-bg-soft: #f9f9fb;
+      --color-bg-muted: #f0f0f3;
+      --color-surface: #ffffff;
+      --color-surface-secondary: #f9f9fb;
+      --color-surface-tertiary: #f0f0f3;
+      --color-text: #1c2024;
+      --color-text-secondary: #60646c;
+      --color-text-muted: #80838d;
+      --color-primary: #0090ff;
+      --color-primary-hover: #0588f0;
+      --color-primary-soft: #e6f4fe;
+      --color-primary-text: #0d74ce;
+      --color-success: #30a46c;
+      --color-success-soft: #e6f6eb;
+      --color-success-text: #218358;
+      --color-warning: #ffc53d;
+      --color-warning-soft: #fff7c2;
+      --color-warning-text: #ab6400;
+      --color-danger: #e5484d;
+      --color-danger-hover: #dc3e42;
+      --color-danger-soft: #feebec;
+      --color-danger-text: #ce2c31;
+      --color-border: #d9d9e0;
+      --color-border-strong: #cdced6;
+      --color-overlay: rgba(15, 23, 42, 0.08);
+      --color-shadow: rgba(15, 23, 42, 0.08);
+
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-5: 20px;
+      --space-6: 24px;
+      --space-7: 32px;
+      --space-8: 40px;
+      --space-9: 48px;
+
+      --radius-sm: 10px;
+      --radius-md: 14px;
+      --radius-lg: 18px;
+      --radius-xl: 24px;
+      --radius-pill: 999px;
+
+      --font-family-base: Inter, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+      --font-size-caption: 12px;
+      --font-size-body-sm: 13px;
+      --font-size-body: 15px;
+      --font-size-body-lg: 16px;
+      --font-size-title-sm: 20px;
+      --font-size-title-md: 28px;
+      --font-size-title-lg: 40px;
+
+      --shadow-sm: 0 8px 20px var(--color-shadow);
+      --shadow-md: 0 18px 36px rgba(15, 23, 42, 0.1);
+      --max-width: 1440px;
+      --toc-width: 248px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--font-family-base);
+      background: linear-gradient(180deg, #fcfcfd 0%, #f9f9fb 100%);
+      color: var(--color-text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .page {
+      width: min(calc(100% - 48px), var(--max-width));
+      margin: 0 auto;
+      padding: 32px 0 56px;
+      display: grid;
+      grid-template-columns: var(--toc-width) minmax(0, 1fr);
+      gap: 24px;
+    }
+
+    .toc {
+      position: sticky;
+      top: 24px;
+      align-self: start;
+      padding: 20px;
+      border: 1px solid rgba(216, 224, 234, 0.88);
+      border-radius: var(--radius-xl);
+      background: rgba(255, 255, 255, 0.82);
+      backdrop-filter: blur(18px);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .brand-mark {
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      background: var(--color-primary-soft);
+      color: var(--color-primary-text);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+
+    .brand-title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-desc {
+      font-size: var(--font-size-body-sm);
+      color: var(--color-text-secondary);
+      line-height: 1.7;
+    }
+
+    .toc-label {
+      display: inline-block;
+      margin-bottom: 12px;
+      font-size: var(--font-size-caption);
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+    }
+
+    .toc-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .toc-item {
+      display: block;
+      padding: 10px 12px;
+      border-radius: 12px;
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-body-sm);
+      transition: 0.16s ease;
+    }
+
+    .toc-item:hover {
+      background: var(--color-surface-secondary);
+      color: var(--color-text);
+    }
+
+    .content {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .hero,
+    .section,
+    .panel {
+      border: 1px solid rgba(216, 224, 234, 0.92);
+      border-radius: var(--radius-xl);
+      background: rgba(255, 255, 255, 0.86);
+      backdrop-filter: blur(18px);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .hero {
+      padding: 40px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
+      gap: 24px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 12px;
+      border-radius: var(--radius-pill);
+      background: var(--color-primary-soft);
+      color: var(--color-primary-text);
+      font-size: var(--font-size-caption);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .hero h1 {
+      margin: 16px 0 12px;
+      font-size: clamp(34px, 4vw, var(--font-size-title-lg));
+      line-height: 1.08;
+      letter-spacing: -0.04em;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 760px;
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-body-lg);
+      line-height: 1.85;
+    }
+
+    .hero-meta {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .hero-meta-card {
+      padding: 18px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      background: var(--color-surface-secondary);
+    }
+
+    .hero-meta-card strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 15px;
+    }
+
+    .hero-meta-card span {
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-body-sm);
+      line-height: 1.7;
+    }
+
+    .section {
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .section-head h2 {
+      margin: 0 0 8px;
+      font-size: var(--font-size-title-sm);
+      letter-spacing: -0.02em;
+    }
+
+    .section-head p {
+      margin: 0;
+      max-width: 760px;
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-body);
+      line-height: 1.8;
+    }
+
+    .section-mark {
+      white-space: nowrap;
+      padding: 8px 12px;
+      border-radius: var(--radius-pill);
+      background: var(--color-surface-tertiary);
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-caption);
+      font-weight: 600;
+    }
+
+    .grid-2,
+    .grid-3,
+    .grid-4 {
+      display: grid;
+      gap: 16px;
+    }
+
+    .grid-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .grid-3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .grid-4 {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .token-card,
+    .spec-card,
+    .component-card,
+    .usage-card {
+      padding: 18px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      background: var(--color-surface);
+    }
+
+    .token-card strong,
+    .spec-card strong,
+    .component-card strong,
+    .usage-card strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 15px;
+    }
+
+    .token-card span,
+    .spec-card span,
+    .component-card span,
+    .usage-card span,
+    .component-card p,
+    .usage-card p {
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-body-sm);
+      line-height: 1.75;
+    }
+
+    .swatch {
+      height: 80px;
+      margin-bottom: 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(17, 24, 39, 0.06);
+    }
+
+    .swatch-bg {
+      background: var(--color-bg);
+    }
+
+    .swatch-surface {
+      background: var(--color-surface);
+    }
+
+    .swatch-text {
+      background: var(--color-text);
+    }
+
+    .swatch-primary {
+      background: var(--color-primary);
+    }
+
+    .swatch-success {
+      background: var(--color-success);
+    }
+
+    .swatch-warning {
+      background: var(--color-warning);
+    }
+
+    .swatch-danger {
+      background: var(--color-danger);
+    }
+
+    .type-sample {
+      padding: 18px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      background: var(--color-surface);
+    }
+
+    .type-line {
+      margin: 0 0 10px;
+      letter-spacing: -0.02em;
+    }
+
+    .type-hero {
+      font-size: var(--font-size-title-lg);
+      font-weight: 700;
+      line-height: 1.1;
+    }
+
+    .type-title {
+      font-size: var(--font-size-title-md);
+      font-weight: 700;
+      line-height: 1.18;
+    }
+
+    .type-section {
+      font-size: var(--font-size-title-sm);
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .type-body {
+      font-size: var(--font-size-body);
+      font-weight: 500;
+      line-height: 1.8;
+    }
+
+    .type-meta {
+      font-size: var(--font-size-body-sm);
+      color: var(--color-text-secondary);
+      line-height: 1.7;
+    }
+
+    .type-eyebrow {
+      font-size: var(--font-size-caption);
+      font-weight: 700;
+      color: var(--color-primary-text);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+    }
+
+    .scale-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .scale-row {
+      display: grid;
+      grid-template-columns: 120px minmax(0, 1fr) 64px;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .scale-bar {
+      height: 14px;
+      border-radius: var(--radius-pill);
+      background: linear-gradient(90deg, var(--color-primary-soft), rgba(0, 144, 255, 0.12));
+      overflow: hidden;
+      position: relative;
+    }
+
+    .scale-bar::before {
+      content: "";
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--color-primary), #5eb1ef);
+    }
+
+    .size-1::before { width: 12%; }
+    .size-2::before { width: 18%; }
+    .size-3::before { width: 24%; }
+    .size-4::before { width: 32%; }
+    .size-5::before { width: 40%; }
+    .size-6::before { width: 50%; }
+    .size-7::before { width: 66%; }
+    .size-8::before { width: 78%; }
+    .size-9::before { width: 92%; }
+
+    .button-row,
+    .tag-row,
+    .notice-stack,
+    .field-stack,
+    .list-stack {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .button-row {
+      align-items: center;
+    }
+
+    .btn {
+      min-height: 44px;
+      padding: 0 18px;
+      border: 1px solid transparent;
+      border-radius: var(--radius-md);
+      font: inherit;
+      font-size: var(--font-size-body);
+      font-weight: 600;
+      cursor: default;
+      transition: 0.16s ease;
+    }
+
+    .btn-primary {
+      background: var(--color-primary);
+      color: #fff;
+      box-shadow: 0 10px 20px rgba(0, 144, 255, 0.18);
+    }
+
+    .btn-secondary {
+      background: var(--color-surface);
+      color: var(--color-text);
+      border-color: var(--color-border);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--color-text-secondary);
+    }
+
+    .btn-danger {
+      background: var(--color-danger);
+      color: #fff;
+      box-shadow: 0 10px 20px rgba(229, 72, 77, 0.18);
+    }
+
+    .field-stack {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .field-label {
+      display: inline-block;
+      margin-bottom: 8px;
+      font-size: var(--font-size-body-sm);
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    .input,
+    .textarea,
+    .select {
+      width: 100%;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-surface);
+      color: var(--color-text);
+      font: inherit;
+      font-size: var(--font-size-body);
+      outline: none;
+    }
+
+    .input,
+    .select {
+      min-height: 46px;
+      padding: 0 14px;
+    }
+
+    .textarea {
+      min-height: 132px;
+      padding: 14px;
+      resize: none;
+    }
+
+    .input.is-focus,
+    .textarea.is-focus,
+    .select.is-focus {
+      border-color: rgba(0, 144, 255, 0.42);
+      box-shadow: 0 0 0 4px rgba(0, 144, 255, 0.12);
+    }
+
+    .input.is-disabled {
+      background: var(--color-surface-tertiary);
+      color: var(--color-text-muted);
+    }
+
+    .field-help {
+      font-size: var(--font-size-body-sm);
+      color: var(--color-text-secondary);
+    }
+
+    .field-error {
+      color: var(--color-danger-text);
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 0 12px;
+      border-radius: var(--radius-pill);
+      font-size: var(--font-size-caption);
+      font-weight: 700;
+    }
+
+    .tag-neutral {
+      background: var(--color-surface-tertiary);
+      color: var(--color-text-secondary);
+    }
+
+    .tag-primary {
+      background: var(--color-primary-soft);
+      color: var(--color-primary-text);
+    }
+
+    .tag-success {
+      background: var(--color-success-soft);
+      color: var(--color-success-text);
+    }
+
+    .tag-warning {
+      background: var(--color-warning-soft);
+      color: var(--color-warning-text);
+    }
+
+    .tag-danger {
+      background: var(--color-danger-soft);
+      color: var(--color-danger-text);
+    }
+
+    .notice-stack {
+      flex-direction: column;
+    }
+
+    .notice {
+      padding: 14px 16px;
+      border-radius: var(--radius-md);
+      border: 1px solid transparent;
+      font-size: var(--font-size-body-sm);
+      line-height: 1.75;
+    }
+
+    .notice-info {
+      background: var(--color-primary-soft);
+      color: var(--color-primary-text);
+      border-color: rgba(0, 144, 255, 0.18);
+    }
+
+    .notice-success {
+      background: var(--color-success-soft);
+      color: var(--color-success-text);
+      border-color: rgba(48, 164, 108, 0.18);
+    }
+
+    .notice-warning {
+      background: var(--color-warning-soft);
+      color: var(--color-warning-text);
+      border-color: rgba(255, 197, 61, 0.28);
+    }
+
+    .notice-danger {
+      background: var(--color-danger-soft);
+      color: var(--color-danger-text);
+      border-color: rgba(229, 72, 77, 0.2);
+    }
+
+    .stats-preview {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .stat-card {
+      padding: 20px;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--color-border);
+      background: var(--color-surface);
+    }
+
+    .stat-label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: var(--font-size-body-sm);
+      color: var(--color-text-secondary);
+    }
+
+    .stat-value {
+      display: block;
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    .stat-hint {
+      display: block;
+      margin-top: 8px;
+      color: var(--color-text-muted);
+      font-size: var(--font-size-caption);
+    }
+
+    .list-stack {
+      flex-direction: column;
+    }
+
+    .list-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      background: var(--color-surface);
+    }
+
+    .list-main {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .list-main strong {
+      margin: 0;
+      font-size: 15px;
+    }
+
+    .list-main span {
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-body-sm);
+    }
+
+    .empty-state {
+      padding: 32px 20px;
+      border: 1px dashed var(--color-border-strong);
+      border-radius: var(--radius-lg);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 252, 0.96));
+      text-align: center;
+    }
+
+    .empty-state strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 16px;
+    }
+
+    .empty-state span {
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-body-sm);
+      line-height: 1.75;
+    }
+
+    .usage-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .usage-card ul {
+      margin: 10px 0 0;
+      padding-left: 18px;
+      color: var(--color-text-secondary);
+    }
+
+    .usage-card li + li {
+      margin-top: 8px;
+    }
+
+    .footer-note {
+      padding: 18px 20px;
+      border-radius: var(--radius-lg);
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid var(--color-border);
+      color: var(--color-text-secondary);
+      font-size: var(--font-size-body-sm);
+      line-height: 1.8;
+    }
+
+    code {
+      padding: 2px 6px;
+      border-radius: 8px;
+      background: var(--color-surface-tertiary);
+      font-family: Consolas, "SFMono-Regular", monospace;
+      font-size: 12px;
+      color: var(--color-text);
+    }
+
+    @media (max-width: 1100px) {
+      .page {
+        grid-template-columns: 1fr;
+      }
+
+      .toc {
+        position: static;
+      }
+
+      .hero,
+      .usage-grid,
+      .grid-4,
+      .grid-3,
+      .grid-2,
+      .stats-preview {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .page {
+        width: min(calc(100% - 24px), var(--max-width));
+        padding-top: 16px;
+      }
+
+      .hero,
+      .section {
+        padding: 20px;
+      }
+
+      .section-head {
+        flex-direction: column;
+      }
+
+      .scale-row {
+        grid-template-columns: 88px minmax(0, 1fr) 52px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <aside class="toc">
+      <div class="brand">
+        <div class="brand-mark">WC</div>
+        <div class="brand-title">WordClash Style</div>
+        <div class="brand-desc">
+          一份用于统一项目界面气质的静态规范页。方向是更极简、更克制、信息优先。
+        </div>
+      </div>
+
+      <span class="toc-label">Sections</span>
+      <nav class="toc-list">
+        <a class="toc-item" href="#principles">设计原则</a>
+        <a class="toc-item" href="#colors">颜色体系</a>
+        <a class="toc-item" href="#type">排版层级</a>
+        <a class="toc-item" href="#space">间距与圆角</a>
+        <a class="toc-item" href="#actions">操作组件</a>
+        <a class="toc-item" href="#status">标签与提示</a>
+        <a class="toc-item" href="#cards">卡片与列表</a>
+        <a class="toc-item" href="#usage">项目落地建议</a>
+      </nav>
+    </aside>
+
+    <main class="content">
+      <section class="hero">
+        <div>
+          <span class="eyebrow">Visual Baseline</span>
+          <h1>克制、清晰、能长期迭代的界面基线</h1>
+          <p>
+            这份页面不模拟具体业务，而是先把视觉规则讲清楚。核心目标只有三件事：
+            让主操作更稳定，让信息层级更清楚，让后续每个页面都能按同一套语法继续生长。
+          </p>
+        </div>
+
+        <div class="hero-meta">
+          <div class="hero-meta-card">
+            <strong>气质关键词</strong>
+            <span>极简、安静、轻专业、阅读友好、低装饰。</span>
+          </div>
+          <div class="hero-meta-card">
+            <strong>视觉策略</strong>
+            <span>参考 Radix Colors 的语义色阶，用更稳定的实色、软底色和可读文本色建立秩序。</span>
+          </div>
+          <div class="hero-meta-card">
+            <strong>后续用途</strong>
+            <span>这会成为项目页面改版时的统一参照，不再逐页临时决定样式。</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="principles" class="section">
+        <div class="section-head">
+          <div>
+            <h2>设计原则</h2>
+            <p>不先追求“有设计感”，先确保所有页面都更稳、更轻、更耐看。下面四条会直接约束后续页面实现。</p>
+          </div>
+          <span class="section-mark">Rule Set</span>
+        </div>
+
+        <div class="grid-4">
+          <div class="spec-card">
+            <strong>信息优先</strong>
+            <span>主标题、主操作、当前状态必须在 3 秒内被理解，装饰不能压过内容。</span>
+          </div>
+          <div class="spec-card">
+            <strong>强调克制</strong>
+            <span>主品牌蓝只用于关键动作、焦点态和轻标签，不承担大面积视觉主导。</span>
+          </div>
+          <div class="spec-card">
+            <strong>边界统一</strong>
+            <span>优先用浅边框、圆角和留白表达结构，减少每个模块都“长得很用力”。</span>
+          </div>
+          <div class="spec-card">
+            <strong>组件可复用</strong>
+            <span>后续页面新增模块时，应优先复用这里的语义令牌和基础组件样式。</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="colors" class="section">
+        <div class="section-head">
+          <div>
+            <h2>颜色体系</h2>
+            <p>颜色分工按职责而不是按“好不好看”命名。这里的基线参考了 Radix Colors，主用 <code>slate</code>、<code>blue</code>、<code>green</code>、<code>amber</code>、<code>red</code> 这几组色阶。</p>
+          </div>
+          <span class="section-mark">Tokens</span>
+        </div>
+
+        <div class="grid-4">
+          <div class="token-card">
+            <div class="swatch swatch-bg"></div>
+            <strong>背景层</strong>
+            <span><code>--color-bg</code> / slate-1<br />#fcfcfd</span>
+          </div>
+          <div class="token-card">
+            <div class="swatch swatch-surface"></div>
+            <strong>表层</strong>
+            <span><code>--color-surface</code> / white<br />#ffffff</span>
+          </div>
+          <div class="token-card">
+            <div class="swatch swatch-text"></div>
+            <strong>主文本</strong>
+            <span><code>--color-text</code> / slate-12<br />#1c2024</span>
+          </div>
+          <div class="token-card">
+            <div class="swatch swatch-primary"></div>
+            <strong>主品牌色</strong>
+            <span><code>--color-primary</code> / blue-9<br />#0090ff</span>
+          </div>
+          <div class="token-card">
+            <div class="swatch swatch-success"></div>
+            <strong>成功状态</strong>
+            <span><code>--color-success</code> / green-9<br />#30a46c</span>
+          </div>
+          <div class="token-card">
+            <div class="swatch swatch-warning"></div>
+            <strong>警告状态</strong>
+            <span><code>--color-warning</code> / amber-9<br />#ffc53d</span>
+          </div>
+          <div class="token-card">
+            <div class="swatch swatch-danger"></div>
+            <strong>危险状态</strong>
+            <span><code>--color-danger</code> / red-9<br />#e5484d</span>
+          </div>
+          <div class="token-card">
+            <div class="swatch" style="background:#d9d9e0;"></div>
+            <strong>边框层</strong>
+            <span><code>--color-border</code> / slate-6<br />#d9d9e0</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="type" class="section">
+        <div class="section-head">
+          <div>
+            <h2>排版层级</h2>
+            <p>标题和说明的落差要足够明显。正文不追求大，而追求稳定、好读、可长时间停留。</p>
+          </div>
+          <span class="section-mark">Typography</span>
+        </div>
+
+        <div class="grid-2">
+          <div class="type-sample">
+            <p class="type-line type-eyebrow">Workspace</p>
+            <p class="type-line type-hero">页面主标题 / 40px</p>
+            <p class="type-line type-title">区块标题 / 28px</p>
+            <p class="type-line type-section">模块标题 / 20px</p>
+            <p class="type-line type-body">正文说明 / 15px，适合表单引导与面板描述。</p>
+            <p class="type-line type-meta">辅助信息 / 13px，适合注释、状态、次级说明。</p>
+          </div>
+
+          <div class="spec-card">
+            <strong>排版规则</strong>
+            <span>
+              标题使用更紧凑的字距和更短的行长；说明文案控制在 2 到 3 行；统计数字和关键单词使用更高权重；
+              不让标签、说明、正文看起来同等重要。
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <section id="space" class="section">
+        <div class="section-head">
+          <div>
+            <h2>间距与圆角</h2>
+            <p>统一用 4 的倍数体系。让页面像是出自同一个产品，而不是每个模块各自决定松紧程度。</p>
+          </div>
+          <span class="section-mark">Spacing</span>
+        </div>
+
+        <div class="grid-2">
+          <div class="component-card">
+            <strong>Spacing Scale</strong>
+            <div class="scale-list">
+              <div class="scale-row"><span>space-1</span><div class="scale-bar size-1"></div><span>4px</span></div>
+              <div class="scale-row"><span>space-2</span><div class="scale-bar size-2"></div><span>8px</span></div>
+              <div class="scale-row"><span>space-3</span><div class="scale-bar size-3"></div><span>12px</span></div>
+              <div class="scale-row"><span>space-4</span><div class="scale-bar size-4"></div><span>16px</span></div>
+              <div class="scale-row"><span>space-5</span><div class="scale-bar size-5"></div><span>20px</span></div>
+              <div class="scale-row"><span>space-6</span><div class="scale-bar size-6"></div><span>24px</span></div>
+              <div class="scale-row"><span>space-7</span><div class="scale-bar size-7"></div><span>32px</span></div>
+              <div class="scale-row"><span>space-8</span><div class="scale-bar size-8"></div><span>40px</span></div>
+              <div class="scale-row"><span>space-9</span><div class="scale-bar size-9"></div><span>48px</span></div>
+            </div>
+          </div>
+
+          <div class="component-card">
+            <strong>Radius Scale</strong>
+            <div class="scale-list">
+              <div class="scale-row"><span>sm</span><div class="scale-bar size-2"></div><span>10px</span></div>
+              <div class="scale-row"><span>md</span><div class="scale-bar size-4"></div><span>14px</span></div>
+              <div class="scale-row"><span>lg</span><div class="scale-bar size-6"></div><span>18px</span></div>
+              <div class="scale-row"><span>xl</span><div class="scale-bar size-8"></div><span>24px</span></div>
+              <div class="scale-row"><span>pill</span><div class="scale-bar size-9"></div><span>999px</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="actions" class="section">
+        <div class="section-head">
+          <div>
+            <h2>操作组件</h2>
+            <p>操作只保留清晰的等级关系。一个视区内通常只有一个真正的主按钮，剩下都应该退后一步。</p>
+          </div>
+          <span class="section-mark">Actions</span>
+        </div>
+
+        <div class="grid-2">
+          <div class="component-card">
+            <strong>Buttons</strong>
+            <div class="button-row">
+              <button class="btn btn-primary" type="button">主操作</button>
+              <button class="btn btn-secondary" type="button">次操作</button>
+              <button class="btn btn-ghost" type="button">弱操作</button>
+              <button class="btn btn-danger" type="button">危险操作</button>
+            </div>
+          </div>
+
+          <div class="component-card">
+            <strong>Fields</strong>
+            <div class="field-stack">
+              <div>
+                <span class="field-label">输入框</span>
+                <input class="input is-focus" value="resilient" />
+                <div class="field-help">聚焦态使用浅蓝描边和外发光，不做厚重阴影。</div>
+              </div>
+              <div>
+                <span class="field-label">文本域</span>
+                <textarea class="textarea">把长说明或正文内容放在这里，仍然保持足够轻的外观。</textarea>
+              </div>
+              <div>
+                <span class="field-label">禁用态</span>
+                <input class="input is-disabled" value="当前不可编辑" />
+                <div class="field-help field-error">错误信息使用单独文本表达，不把整个控件染成高饱和红色。</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="status" class="section">
+        <div class="section-head">
+          <div>
+            <h2>标签与提示</h2>
+            <p>状态样式只服务状态本身，不作为装饰。标签短、提示轻、语义单一，避免每个状态都过度喊话。</p>
+          </div>
+          <span class="section-mark">Status</span>
+        </div>
+
+        <div class="grid-2">
+          <div class="component-card">
+            <strong>Tags</strong>
+            <div class="tag-row">
+              <span class="tag tag-neutral">默认</span>
+              <span class="tag tag-primary">聚焦中</span>
+              <span class="tag tag-success">已完成</span>
+              <span class="tag tag-warning">待处理</span>
+              <span class="tag tag-danger">已失败</span>
+            </div>
+          </div>
+
+          <div class="component-card">
+            <strong>Notices</strong>
+            <div class="notice-stack">
+              <div class="notice notice-info">正在翻译段落 2/6，页面其余内容仍可继续浏览。</div>
+              <div class="notice notice-success">已导入 12 个单词，数据已同步到本地。</div>
+              <div class="notice notice-warning">当前文章较长，解析时间会比短文稍久。</div>
+              <div class="notice notice-danger">导入失败：文件格式不符合当前数据结构。</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="cards" class="section">
+        <div class="section-head">
+          <div>
+            <h2>卡片、列表与空状态</h2>
+            <p>结构感来自留白、边界和主次层级，而不是背景色堆叠。卡片必须有职责，列表必须易扫读。</p>
+          </div>
+          <span class="section-mark">Surfaces</span>
+        </div>
+
+        <div class="stats-preview">
+          <div class="stat-card">
+            <span class="stat-label">单词总量</span>
+            <span class="stat-value">186</span>
+            <span class="stat-hint">适合展示核心进度指标</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">精读文章</span>
+            <span class="stat-value">12</span>
+            <span class="stat-hint">数字高对比，说明低对比</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">本周练习</span>
+            <span class="stat-value">37</span>
+            <span class="stat-hint">卡片不要承载过多解释性内容</span>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="component-card">
+            <strong>List Item</strong>
+            <div class="list-stack">
+              <div class="list-item">
+                <div class="list-main">
+                  <strong>resilient</strong>
+                  <span>adj. 有韧性的；恢复力强的</span>
+                </div>
+                <span class="tag tag-primary">最近加入</span>
+              </div>
+              <div class="list-item">
+                <div class="list-main">
+                  <strong>Article 01</strong>
+                  <span>4 段已翻译，12 句已拆解</span>
+                </div>
+                <span class="tag tag-neutral">继续阅读</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="component-card">
+            <strong>Empty State</strong>
+            <div class="empty-state">
+              <strong>这里还没有内容</strong>
+              <span>空状态应该直接告诉用户下一步做什么，而不是只写“暂无数据”。</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="usage" class="section">
+        <div class="section-head">
+          <div>
+            <h2>项目落地建议</h2>
+            <p>这份规范不是孤立页面，后续会直接映射回项目。下面是建议保持不变的方向，以及建议调整的地方。</p>
+          </div>
+          <span class="section-mark">Application</span>
+        </div>
+
+        <div class="usage-grid">
+          <div class="usage-card">
+            <strong>建议保留</strong>
+            <ul>
+              <li>工作台式布局结构，继续保留明显的内容主区。</li>
+              <li>统一语义令牌命名，例如 <code>--color-primary</code>、<code>--color-border</code>。</li>
+              <li>卡片化模块拆分方式，便于后续页面扩展。</li>
+            </ul>
+          </div>
+
+          <div class="usage-card">
+            <strong>建议收敛</strong>
+            <ul>
+              <li>减少大面积渐变和过强品牌色存在感。</li>
+              <li>侧边区域从“视觉主角”退回“结构导航”。</li>
+              <li>统一状态块、标签和输入焦点态，不再逐页微调。</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="footer-note">
+          后续把这套风格应用到项目时，建议优先处理全局设计令牌、按钮 / 表单 / 提示等基础组件，
+          再逐页迁移 `SideNav`、录入页、阅读页和单词库。这样改动路径最清晰，也最不容易来回返工。
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

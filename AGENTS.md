@@ -119,3 +119,18 @@ pnpm run build    # 生产构建
 - 2026-06-07: 项目初始化，完成 4 个页面骨架
 - 2026-08-03: 同步现有功能至文档；API Key 迁移到 .env 环境变量注入；新增默写游戏规划；CI 部署改用 pnpm
 - 2026-08-04: 新增文章辅助阅读功能（导入 / 首屏解析 / 分层精读 / 生词入库 / 读后理解题），打通「读 → 学 → 练」闭环
+
+## 界面风格基线（持续生效）
+
+- 当前项目后续所有 UI 改动、新页面设计、现有页面改版，统一以 `docs/research/wordclash-editorial-quiet.html` 为最高视觉基准。
+- 风格决策说明以 `docs/research/direction-approved.md` 为准；若两者存在理解分歧，以 `wordclash-editorial-quiet.html` 的实际视觉表达优先。
+- 后续默认不得擅自偏回纯 `Radix Quiet`、纯 `Editorial Light` 或 `Soft Tech Workspace`；除非用户明确要求重新换方向。
+- 视觉继承原则：
+  - 配色继承 `Editorial Quiet` 的暖中性色背景、柔和棕色强调、克制蓝绿色辅助。
+  - 排版继承 `Editorial Quiet` 的标题字气与正文阅读节奏，但必须保证界面可读性和操作清晰度。
+  - 布局、卡片层级、间距、圆角、组件秩序继承 `Editorial Quiet` 中沿自 `Radix Quiet` 的骨架与 spacing 纪律。
+  - 文章阅读、单词详情类页面可以更强调阅读感；录入、游戏、操作型页面必须保留明确的交互反馈，不得做得过轻。
+- 在进行任何中大型 UI 修改前，先读取这两个文件：
+  - `docs/research/wordclash-editorial-quiet.html`
+  - `docs/research/direction-approved.md`
+- 若新增页面或新增组件缺少明确视觉说明，默认按 `Editorial Quiet` 延展，而不是重新发明一套新风格。

@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WordClash Radix Quiet</title>
+  <style>
+    :root {
+      color-scheme: light;
+
+      /* 基于 Radix Colors 的静态演示令牌 */
+      --slate-1: #fcfcfd;
+      --slate-2: #f9f9fb;
+      --slate-3: #f0f0f3;
+      --slate-4: #e8e8ec;
+      --slate-5: #e0e1e6;
+      --slate-6: #d9d9e0;
+      --slate-7: #cdced6;
+      --slate-8: #b9bbc6;
+      --slate-9: #8b8d98;
+      --slate-10: #80838d;
+      --slate-11: #60646c;
+      --slate-12: #1c2024;
+
+      --blue-3: #e6f4fe;
+      --blue-4: #d5efff;
+      --blue-9: #0090ff;
+      --blue-10: #0588f0;
+      --blue-11: #0d74ce;
+
+      --green-3: #e6f6eb;
+      --green-9: #30a46c;
+      --green-11: #218358;
+
+      --amber-3: #fff7c2;
+      --amber-9: #ffc53d;
+      --amber-11: #ab6400;
+
+      --red-3: #feebec;
+      --red-9: #e5484d;
+      --red-11: #ce2c31;
+
+      --bg-page: linear-gradient(180deg, #fcfcfd 0%, #f6f6f9 100%);
+      --bg-panel: rgba(255, 255, 255, 0.82);
+      --bg-soft: rgba(249, 249, 251, 0.9);
+      --text-main: var(--slate-12);
+      --text-secondary: var(--slate-11);
+      --text-muted: var(--slate-10);
+      --border: rgba(217, 217, 224, 0.92);
+      --border-strong: rgba(205, 206, 214, 0.98);
+      --primary: var(--blue-9);
+      --primary-hover: var(--blue-10);
+      --primary-soft: rgba(0, 144, 255, 0.1);
+      --primary-text: var(--blue-11);
+      --success-soft: rgba(48, 164, 108, 0.1);
+      --warning-soft: rgba(255, 197, 61, 0.24);
+      --danger-soft: rgba(229, 72, 77, 0.1);
+      --shadow-sm: 0 10px 24px rgba(28, 32, 36, 0.05);
+      --shadow-md: 0 20px 60px rgba(28, 32, 36, 0.08);
+
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-5: 20px;
+      --space-6: 24px;
+      --space-7: 32px;
+      --space-8: 40px;
+      --space-9: 48px;
+
+      --radius-sm: 12px;
+      --radius-md: 16px;
+      --radius-lg: 20px;
+      --radius-xl: 28px;
+      --radius-pill: 999px;
+
+      --font-body: Inter, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+      --font-caption: 12px;
+      --font-body-sm: 13px;
+      --font-body: 15px;
+      --font-body-lg: 16px;
+      --font-title-sm: 20px;
+      --font-title-md: 28px;
+      --font-title-lg: 44px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--font-body);
+      color: var(--text-main);
+      background: var(--bg-page);
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .page {
+      width: min(100% - 40px, 1500px);
+      margin: 0 auto;
+      padding: 24px 0 40px;
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      gap: 20px;
+    }
+
+    .sidebar,
+    .hero,
+    .panel,
+    .token-card,
+    .guide-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      backdrop-filter: blur(20px);
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 24px;
+      height: calc(100vh - 48px);
+      padding: 22px;
+      border-radius: var(--radius-xl);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-mark {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--blue-3), #ffffff);
+      color: var(--primary-text);
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+    }
+
+    .brand-copy strong {
+      display: block;
+      font-size: 16px;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-copy span {
+      display: block;
+      margin-top: 4px;
+      color: var(--text-secondary);
+      font-size: var(--font-body-sm);
+      line-height: 1.7;
+    }
+
+    .section-label {
+      color: var(--text-muted);
+      font-size: var(--font-caption);
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .nav-group,
+    .mini-stack,
+    .token-grid,
+    .stats-grid,
+    .workspace-grid,
+    .guide-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .nav-item {
+      padding: 12px 14px;
+      border-radius: 14px;
+      color: var(--text-secondary);
+      font-size: var(--font-body-sm);
+      transition: 0.18s ease;
+    }
+
+    .nav-item strong {
+      display: block;
+      margin-bottom: 2px;
+      color: var(--text-main);
+      font-size: 14px;
+    }
+
+    .nav-item.active {
+      background: var(--primary-soft);
+      color: var(--primary-text);
+      border: 1px solid rgba(0, 144, 255, 0.14);
+    }
+
+    .nav-item.active strong {
+      color: var(--primary-text);
+    }
+
+    .mini-card {
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--bg-soft);
+    }
+
+    .mini-card strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+
+    .mini-card span {
+      color: var(--text-secondary);
+      font-size: var(--font-body-sm);
+      line-height: 1.7;
+    }
+
+    .content {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .hero {
+      border-radius: 30px;
+      padding: 28px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) 340px;
+      gap: 24px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 0 12px;
+      border-radius: var(--radius-pill);
+      background: var(--primary-soft);
+      color: var(--primary-text);
+      font-size: var(--font-caption);
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .hero h1 {
+      margin: 16px 0 14px;
+      max-width: 760px;
+      font-size: clamp(34px, 4.2vw, var(--font-title-lg));
+      line-height: 1.02;
+      letter-spacing: -0.045em;
+      text-wrap: pretty;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 760px;
+      color: var(--text-secondary);
+      font-size: var(--font-body-lg);
+      line-height: 1.85;
+      text-wrap: pretty;
+    }
+
+    .hero-actions {
+      margin-top: 24px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .button {
+      min-height: 44px;
+      padding: 0 18px;
+      border: 1px solid transparent;
+      border-radius: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .button-primary {
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 12px 24px rgba(0, 144, 255, 0.18);
+    }
+
+    .button-secondary {
+      background: #ffffff;
+      border-color: var(--border);
+      color: var(--text-main);
+    }
+
+    .hero-rail {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .rail-card {
+      padding: 16px;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(249, 249, 251, 0.96));
+    }
+
+    .rail-card strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+
+    .rail-card span {
+      color: var(--text-secondary);
+      font-size: var(--font-body-sm);
+      line-height: 1.7;
+    }
+
+    .stats-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .stat-card {
+      padding: 20px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.86);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .stat-card span,
+    .stat-card small {
+      display: block;
+    }
+
+    .stat-card span {
+      color: var(--text-secondary);
+      font-size: var(--font-body-sm);
+    }
+
+    .stat-card strong {
+      display: block;
+      margin: 10px 0 8px;
+      font-size: 34px;
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+
+    .stat-card small {
+      color: var(--text-muted);
+      font-size: var(--font-caption);
+      line-height: 1.6;
+    }
+
+    .workspace-grid {
+      grid-template-columns: minmax(0, 1.05fr) minmax(330px, 0.95fr);
+    }
+
+    .panel {
+      border-radius: 26px;
+      padding: 24px;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .panel-head h2,
+    .panel-head h3 {
+      margin: 0;
+      letter-spacing: -0.03em;
+    }
+
+    .panel-head h2 {
+      font-size: var(--font-title-sm);
+    }
+
+    .panel-head h3 {
+      font-size: 18px;
+    }
+
+    .panel-head p {
+      margin: 8px 0 0;
+      color: var(--text-secondary);
+      font-size: var(--font-body-sm);
+      line-height: 1.75;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 12px;
+      border-radius: var(--radius-pill);
+      background: var(--slate-3);
+      color: var(--text-secondary);
+      font-size: var(--font-caption);
+      font-weight: 700;
+    }
+
+    .badge-info {
+      background: var(--primary-soft);
+      color: var(--primary-text);
+    }
+
+    .badge-success {
+      background: var(--success-soft);
+      color: var(--green-11);
+    }
+
+    .badge-warning {
+      background: var(--warning-soft);
+      color: var(--amber-11);
+    }
+
+    .field-block,
+    .segment,
+    .article-card,
+    .word-item,
+    .guide-card {
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.86);
+      border-radius: 18px;
+    }
+
+    .field-block {
+      padding: 16px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .field-label {
+      color: var(--text-main);
+      font-size: var(--font-body-sm);
+      font-weight: 700;
+    }
+
+    .field-value,
+    .textarea,
+    .sentence,
+    .tip,
+    .meta-line {
+      color: var(--text-secondary);
+      font-size: var(--font-body);
+      line-height: 1.8;
+    }
+
+    .textarea {
+      min-height: 130px;
+    }
+
+    .input-shell {
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      border: 1px solid rgba(0, 144, 255, 0.2);
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(230, 244, 254, 0.34));
+      box-shadow: 0 0 0 4px rgba(0, 144, 255, 0.08);
+    }
+
+    .stack {
+      display: grid;
+      gap: 14px;
+    }
+
+    .segment {
+      padding: 16px;
+    }
+
+    .segment strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 15px;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 0 12px;
+      border-radius: var(--radius-pill);
+      font-size: var(--font-caption);
+      font-weight: 700;
+    }
+
+    .chip-primary {
+      background: var(--blue-3);
+      color: var(--blue-11);
+    }
+
+    .chip-success {
+      background: var(--green-3);
+      color: var(--green-11);
+    }
+
+    .chip-warning {
+      background: var(--amber-3);
+      color: var(--amber-11);
+    }
+
+    .chip-danger {
+      background: var(--red-3);
+      color: var(--red-11);
+    }
+
+    .article-card {
+      padding: 18px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .article-card h3 {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: -0.02em;
+    }
+
+    .article-card p {
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: var(--font-body-sm);
+      line-height: 1.8;
+      text-wrap: pretty;
+    }
+
+    .article-meta,
+    .word-head,
+    .guide-list {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .word-item {
+      padding: 16px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .word-head {
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .word-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .word-title strong {
+      font-size: 18px;
+      letter-spacing: -0.02em;
+    }
+
+    .phonetic {
+      color: var(--text-muted);
+      font-size: var(--font-body-sm);
+    }
+
+    .token-grid {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+
+    .token-card {
+      padding: 16px;
+      border-radius: 20px;
+    }
+
+    .swatch {
+      height: 74px;
+      margin-bottom: 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(28, 32, 36, 0.06);
+    }
+
+    .guide-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .guide-card {
+      padding: 18px;
+      border-radius: 22px;
+    }
+
+    .guide-card strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 15px;
+    }
+
+    .guide-card p,
+    .guide-card li {
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: var(--font-body-sm);
+      line-height: 1.8;
+    }
+
+    .guide-card ul {
+      margin: 10px 0 0;
+      padding-left: 18px;
+    }
+
+    .footer-note {
+      padding: 18px 22px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.7);
+      color: var(--text-secondary);
+      font-size: var(--font-body-sm);
+      line-height: 1.85;
+    }
+
+    @media (max-width: 1180px) {
+      .page {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: static;
+        height: auto;
+      }
+
+      .hero,
+      .workspace-grid,
+      .stats-grid,
+      .guide-grid,
+      .token-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .page {
+        width: min(100% - 20px, 1500px);
+        padding-top: 16px;
+      }
+
+      .hero,
+      .panel,
+      .sidebar {
+        padding: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!--
+    设计假设：
+    1. 这份页面用于确认 WordClash 后续统一界面风格，不直接接入真实数据。
+    2. 用户已选择 Radix Quiet 方向，因此这里强调安静、秩序、语义色阶和长期可维护性。
+    3. 页面内容刻意映射项目现有模块：侧边导航、单词录入、文章阅读、单词库、学习进度。
+  -->
+  <div class="page">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">WC</div>
+        <div class="brand-copy">
+          <strong>WordClash Quiet</strong>
+          <span>基于 Radix 语义色阶的界面方向稿，用来统一后续项目视觉语言。</span>
+        </div>
+      </div>
+
+      <div class="nav-group">
+        <div class="section-label">Navigation</div>
+        <a class="nav-item active" href="#workspace">
+          <strong>学习工作台</strong>
+          当前主界面如何组织信息和操作
+        </a>
+        <a class="nav-item" href="#article">
+          <strong>文章阅读</strong>
+          阅读、拆解、生词入库的层级
+        </a>
+        <a class="nav-item" href="#tokens">
+          <strong>视觉令牌</strong>
+          背景、边框、主色与状态色映射
+        </a>
+        <a class="nav-item" href="#guides">
+          <strong>落地规则</strong>
+          迁回项目时建议保留和收敛的点
+        </a>
+      </div>
+
+      <div class="mini-stack">
+        <div class="section-label">Quiet Rules</div>
+        <div class="mini-card">
+          <strong>结构优先</strong>
+          <span>用留白、边框、圆角和标题层级建立秩序，不依赖大面积装饰背景。</span>
+        </div>
+        <div class="mini-card">
+          <strong>主色克制</strong>
+          <span>蓝色只承担主操作、焦点态和少量标签，不把整个页面染成品牌色。</span>
+        </div>
+        <div class="mini-card">
+          <strong>读写友好</strong>
+          <span>正文保持稳定字号和行高，让录入、阅读、分析都更安静耐看。</span>
+        </div>
+      </div>
+    </aside>
+
+    <main class="content">
+      <section class="hero">
+        <div>
+          <span class="eyebrow">Radix Quiet / Direction 01</span>
+          <h1>把 WordClash 做成一个更安静、更清楚、更适合长期迭代的学习工作台</h1>
+          <p>
+            这不是单纯的视觉规范页，而是一份接近真实产品界面的静态原型。
+            它把项目现有的录入、阅读、词库和分析模块拉到同一套语法里：
+            背景更轻，层级更清楚，状态表达更稳定，后面应用回项目时也更顺。
+          </p>
+          <div class="hero-actions">
+            <span class="button button-primary">主操作基线</span>
+            <span class="button button-secondary">次级动作基线</span>
+          </div>
+        </div>
+
+        <div class="hero-rail">
+          <div class="rail-card">
+            <strong>视觉温度</strong>
+            <span>安静、中性、轻专业。比现在更克制，但不做成冷冰冰的后台工具。</span>
+          </div>
+          <div class="rail-card">
+            <strong>颜色策略</strong>
+            <span>主用 `slate` 中性色阶搭结构，用 `blue / green / amber / red` 做语义反馈。</span>
+          </div>
+          <div class="rail-card">
+            <strong>后续映射</strong>
+            <span>优先落回 `App.vue` 全局令牌、`SideNav`、基础按钮和表单组件。</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="stats-grid">
+        <div class="stat-card">
+          <span>本周学习</span>
+          <strong>37</strong>
+          <small>统计卡片只保留关键数字与一句解释，避免噪音。</small>
+        </div>
+        <div class="stat-card">
+          <span>单词总量</span>
+          <strong>186</strong>
+          <small>数字对比更强，说明对比更弱，信息层级一眼可扫。</small>
+        </div>
+        <div class="stat-card">
+          <span>精读文章</span>
+          <strong>12</strong>
+          <small>统计组件统一用一套边界和内边距，不再逐页变化。</small>
+        </div>
+        <div class="stat-card">
+          <span>连续练习</span>
+          <strong>8d</strong>
+          <small>轻微强调，不使用夸张渐变或复杂装饰。</small>
+        </div>
+      </section>
+
+      <section id="workspace" class="workspace-grid">
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>单词录入工作台</h2>
+              <p>主工作区强调任务流：输入、解析、确认入库。所有组件都围绕“专注当前动作”来收敛。</p>
+            </div>
+            <span class="badge badge-info">Input / Parse</span>
+          </div>
+
+          <div class="stack">
+            <div class="field-block">
+              <span class="field-label">待录入单词</span>
+              <div class="input-shell">resilient</div>
+              <span class="meta-line">聚焦态只给轻描边和淡蓝光圈，不用厚重高饱和阴影。</span>
+            </div>
+
+            <div class="field-block">
+              <span class="field-label">记忆提示</span>
+              <div class="textarea">把 “resilient” 理解成一种能够被压弯、但很快恢复原状的状态，用来记忆“有韧性、恢复力强”。</div>
+            </div>
+
+            <div class="segment">
+              <strong>解析结果预览</strong>
+              <div class="chips">
+                <span class="chip chip-primary">adj. 有韧性的</span>
+                <span class="chip chip-success">音标已补全</span>
+                <span class="chip chip-warning">例句待确认</span>
+              </div>
+              <p class="tip">状态标签只表达状态，不承担装饰作用。强调色始终被控制在局部。</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" id="article">
+          <div class="panel-head">
+            <div>
+              <h3>文章辅助阅读</h3>
+              <p>阅读页的重点不应该是“页面很热闹”，而是让摘要、翻译、句子拆解和生词动作自然分层。</p>
+            </div>
+            <span class="badge badge-success">Reading Flow</span>
+          </div>
+
+          <div class="stack">
+            <article class="article-card">
+              <div class="article-meta">
+                <span class="badge">B2 难度</span>
+                <span class="badge badge-info">摘要已生成</span>
+                <span class="badge badge-success">3 段已拆解</span>
+              </div>
+              <h3>How Small Habits Shape Consistency</h3>
+              <p>
+                小习惯不会立刻改变结果，但它会持续塑造行为模式。
+                当学习动作被拆成更容易开始的小单位时，坚持本身就会变得更轻。
+              </p>
+              <div class="segment">
+                <strong>句子拆解示例</strong>
+                <div class="sentence">
+                  “When habits become easy to start, consistency no longer feels like a battle.”
+                </div>
+                <div class="chips" style="margin-top: 10px;">
+                  <span class="chip chip-primary">主句：consistency no longer feels...</span>
+                  <span class="chip chip-warning">条件从句：When habits become...</span>
+                </div>
+              </div>
+            </article>
+
+            <div class="word-item">
+              <div class="word-head">
+                <div class="word-title">
+                  <strong>consistency</strong>
+                  <span class="phonetic">/kənˈsɪstənsi/</span>
+                </div>
+                <span class="badge badge-info">点击查义</span>
+              </div>
+              <div class="meta-line">n. 一致性；持续稳定。这里的单词卡不再像独立广告牌，而是阅读工作流里的轻量补充模块。</div>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <h2>单词库列表基线</h2>
+            <p>列表项更偏“安静的内容容器”，弱化装饰感，让用户更容易扫词、看释义、识别最近状态。</p>
+          </div>
+          <span class="badge badge-warning">Word Bank</span>
+        </div>
+
+        <div class="stack">
+          <div class="word-item">
+            <div class="word-head">
+              <div class="word-title">
+                <strong>resilient</strong>
+                <span class="phonetic">/rɪˈzɪliənt/</span>
+              </div>
+              <span class="chip chip-success">最近加入</span>
+            </div>
+            <div class="meta-line">adj. 有韧性的；恢复力强的</div>
+          </div>
+
+          <div class="word-item">
+            <div class="word-head">
+              <div class="word-title">
+                <strong>retain</strong>
+                <span class="phonetic">/rɪˈteɪn/</span>
+              </div>
+              <span class="chip chip-warning">本周复习</span>
+            </div>
+            <div class="meta-line">v. 保留；记住；维持</div>
+          </div>
+
+          <div class="word-item">
+            <div class="word-head">
+              <div class="word-title">
+                <strong>overwhelming</strong>
+                <span class="phonetic">/ˌoʊvərˈwelmɪŋ/</span>
+              </div>
+              <span class="chip chip-danger">连续答错</span>
+            </div>
+            <div class="meta-line">adj. 压倒性的；令人难以招架的</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="tokens">
+        <div class="panel-head">
+          <div>
+            <h2>核心视觉令牌</h2>
+            <p>这里保留最值得回灌到项目里的颜色层级。重点不是“颜色多”，而是背景、文本、边框、状态色职责清楚。</p>
+          </div>
+          <span class="badge">Token Mapping</span>
+        </div>
+
+        <div class="token-grid">
+          <div class="token-card">
+            <div class="swatch" style="background:#fcfcfd;"></div>
+            <strong>背景层</strong>
+            <div class="meta-line">`slate-1` / #fcfcfd</div>
+          </div>
+          <div class="token-card">
+            <div class="swatch" style="background:#ffffff;"></div>
+            <strong>表层</strong>
+            <div class="meta-line">white / #ffffff</div>
+          </div>
+          <div class="token-card">
+            <div class="swatch" style="background:#1c2024;"></div>
+            <strong>主文本</strong>
+            <div class="meta-line">`slate-12` / #1c2024</div>
+          </div>
+          <div class="token-card">
+            <div class="swatch" style="background:#0090ff;"></div>
+            <strong>主品牌</strong>
+            <div class="meta-line">`blue-9` / #0090ff</div>
+          </div>
+          <div class="token-card">
+            <div class="swatch" style="background:#d9d9e0;"></div>
+            <strong>边框</strong>
+            <div class="meta-line">`slate-6` / #d9d9e0</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="guide-grid" id="guides">
+        <article class="guide-card">
+          <strong>建议保留</strong>
+          <ul>
+            <li>工作台式布局和清晰主内容区。</li>
+            <li>统计卡、列表卡、状态提示的组件化结构。</li>
+            <li>语义命名方式，例如 `primary / success / warning / danger`。</li>
+          </ul>
+        </article>
+
+        <article class="guide-card">
+          <strong>建议收敛</strong>
+          <ul>
+            <li>侧边栏从视觉主角退回为结构导航。</li>
+            <li>减少大块品牌色背景和偏装饰性的渐变。</li>
+            <li>统一输入焦点、标签、提示块的表现，不再逐页重做。</li>
+          </ul>
+        </article>
+
+        <article class="guide-card">
+          <strong>建议先落地的文件</strong>
+          <ul>
+            <li>`src/App.vue`：全局颜色、圆角、阴影和基础字体。</li>
+            <li>`src/components/SideNav.vue`：侧边导航结构和状态样式。</li>
+            <li>各页面基础按钮、表单、卡片和空状态。</li>
+          </ul>
+        </article>
+      </section>
+
+      <div class="footer-note">
+        这份新稿更接近真正会应用回项目的界面基线，而不是单纯的“风格板”。
+        下一步如果继续推进，最合适的路径是先把这套令牌落到 `App.vue` 和 `SideNav.vue`，再逐页迁移录入页、文章阅读页和单词库。
+      </div>
+    </main>
+  </div>
+</body>
+</html>

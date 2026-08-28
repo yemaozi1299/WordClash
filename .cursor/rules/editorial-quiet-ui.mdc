@@ -1,0 +1,17 @@
+---
+description: WordClash 统一使用 Editorial Quiet 界面风格
+alwaysApply: true
+---
+
+# Editorial Quiet UI Rule
+
+- 处理本项目 UI、页面样式、组件外观、布局层级时，默认以 `docs/research/wordclash-editorial-quiet.html` 为最高视觉基准。
+- 同步参考 `docs/research/direction-approved.md`，理解为何最终选择了这条融合方向。
+- 不要擅自切回纯 `Radix Quiet`、纯 `Editorial Light` 或 `Soft Tech Workspace`，除非用户明确要求换方向。
+- 默认继承以下特征：
+  - 暖中性色页面背景与柔和表层
+  - 棕色主强调 + 克制蓝绿色辅助
+  - 更有阅读感的标题字气
+  - 清楚稳定的工作台骨架、卡片层级、统一间距和圆角
+- 阅读类页面可以更强调正文留白与批注感；录入、游戏、操作类页面必须保留明确交互反馈，不能做得过轻。
+- 新建页面或组件时，优先做“Editorial Quiet 的延展”，不要重新发明另一套视觉语言。
