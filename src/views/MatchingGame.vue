@@ -98,11 +98,14 @@ const sessionWrong = computed(() =>
   gameStore.sessionHistory.filter(h => h.result === 'wrong').length
 )
 
-const refreshHint = computed(() =>
-  wordsStore.wordCount > gameStore.leftCards.length
-    ? '每答对 1 对补入 1 对新词'
-    : '当前词库不足时不再补牌'
-)
+const refreshHint = computed(() => {
+  if (wordsStore.wordCount <= gameStore.leftCards.length) {
+    return '当前词库不足时不再补牌'
+  }
+
+  const remaining = 2 - gameStore.pendingReplenishPairs.length
+  return remaining <= 0 ? '正在补入 2 对新词' : `再答对 ${remaining} 对补入新词`
+})
 </script>
 
 <template>
@@ -136,7 +139,7 @@ const refreshHint = computed(() =>
       <div class="stat-card">
         <span class="stat-label">牌面刷新</span>
         <span class="stat-value">{{ refreshHint }}</span>
-        <span class="stat-hint">仅替换当前已配对成功的那一对，其余牌面保持不动</span>
+        <span class="stat-hint">累计答对 2 对后补入 2 对新词，其余未配对牌面保持不动</span>
       </div>
     </section>
 

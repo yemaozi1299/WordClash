@@ -15,6 +15,7 @@ export const useGameStore = defineStore('game', () => {
   const sessionHistory = ref([]) // [{ wordId, word, result, timestamp }]
   const roundCount = ref(0)
   const lastRoundUsage = ref({}) // { wordId: roundNumber }
+  const pendingReplenishPairs = ref([]) // [{ leftSlot, rightSlot, matchedWordId }]
 
   function getCandidateWords(count = PAIR_COUNT, excludedIds = []) {
     const wordsStore = useWordsStore()
@@ -117,6 +118,7 @@ export const useGameStore = defineStore('game', () => {
     roundCount.value++
     sessionHistory.value = []
     matchResult.value = null
+    pendingReplenishPairs.value = []
 
     // Build left cards (English)
     const picked = words.slice(0, PAIR_COUNT)
@@ -182,37 +184,52 @@ export const useGameStore = defineStore('game', () => {
     const rightSlot = selectedRight.value.slot
     const matchedWordId = selectedLeft.value.wordId
 
-    replenishMatchedPair(leftSlot, rightSlot, matchedWordId)
+    leftCards.value[leftSlot] = { ...leftCards.value[leftSlot], text: '', wordId: null, cleared: true }
+    rightCards.value[rightSlot] = { ...rightCards.value[rightSlot], text: '', wordId: null, cleared: true }
+    pendingReplenishPairs.value.push({ leftSlot, rightSlot, matchedWordId })
     resetSelection()
+
+    if (pendingReplenishPairs.value.length >= 2) {
+      replenishPendingPairs()
+    }
   }
 
-  function replenishMatchedPair(leftSlot, rightSlot, matchedWordId) {
+  function replenishPendingPairs() {
+    if (pendingReplenishPairs.value.length === 0) return
+
+    const replenishingPairs = pendingReplenishPairs.value.slice(0, 2)
+    const remainingPairs = pendingReplenishPairs.value.slice(replenishingPairs.length)
     const activeIds = leftCards.value
-      .filter(card => card.wordId && card.slot !== leftSlot)
+      .filter(card => card.wordId)
       .map(card => card.wordId)
+    const matchedIds = replenishingPairs.map(item => item.matchedWordId)
+    const nextWords = getCandidateWords(replenishingPairs.length, [...activeIds, ...matchedIds])
+    const unresolvedPairs = []
 
-    const [nextWord] = getCandidateWords(1, [...activeIds, matchedWordId])
+    replenishingPairs.forEach((pair, index) => {
+      const nextWord = nextWords[index]
+      if (!nextWord) {
+        unresolvedPairs.push(pair)
+        return
+      }
 
-    if (!nextWord) {
-      leftCards.value[leftSlot] = { ...leftCards.value[leftSlot], text: '', wordId: null, cleared: true }
-      rightCards.value[rightSlot] = { ...rightCards.value[rightSlot], text: '', wordId: null, cleared: true }
-      return
-    }
+      leftCards.value[pair.leftSlot] = {
+        id: `l-${pair.leftSlot}-${Date.now()}-${index}`,
+        text: nextWord.word,
+        wordId: nextWord.id,
+        slot: pair.leftSlot
+      }
+      rightCards.value[pair.rightSlot] = {
+        id: `r-${pair.rightSlot}-${Date.now()}-${index}`,
+        text: nextWord.meanings[0]?.meaning || nextWord.word,
+        wordId: nextWord.id,
+        slot: pair.rightSlot
+      }
 
-    leftCards.value[leftSlot] = {
-      id: `l-${leftSlot}-${Date.now()}`,
-      text: nextWord.word,
-      wordId: nextWord.id,
-      slot: leftSlot
-    }
-    rightCards.value[rightSlot] = {
-      id: `r-${rightSlot}-${Date.now()}`,
-      text: nextWord.meanings[0]?.meaning || nextWord.word,
-      wordId: nextWord.id,
-      slot: rightSlot
-    }
+      lastRoundUsage.value[nextWord.id] = roundCount.value
+    })
 
-    lastRoundUsage.value[nextWord.id] = roundCount.value
+    pendingReplenishPairs.value = [...unresolvedPairs, ...remainingPairs]
   }
 
   function endSession() {
@@ -239,6 +256,7 @@ export const useGameStore = defineStore('game', () => {
     matchResult,
     sessionHistory,
     roundCount,
+    pendingReplenishPairs,
     allCleared,
     startSession,
     selectLeft,
