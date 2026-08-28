@@ -15,16 +15,18 @@ export const useGameStore = defineStore('game', () => {
   const sessionHistory = ref([]) // [{ wordId, word, result, timestamp }]
   const roundCount = ref(0)
   const lastRoundUsage = ref({}) // { wordId: roundNumber }
-  const pendingRefresh = ref(0)  // 积攒的匹配对数
 
-  function getCandidateWords() {
+  function getCandidateWords(count = PAIR_COUNT, excludedIds = []) {
     const wordsStore = useWordsStore()
     const all = wordsStore.words
     if (all.length === 0) return []
 
     const now = roundCount.value
+    const excludedSet = new Set(excludedIds)
 
-    const scored = all.map(w => {
+    const scored = all
+      .filter(w => !excludedSet.has(w.id))
+      .map(w => {
       let score = 0
       const s = w.stats
 
@@ -61,14 +63,14 @@ export const useGameStore = defineStore('game', () => {
       score -= s.consecutiveCorrect * 3
 
       // Minimum score ensures every word has a chance
-      return { word: w, score: Math.max(1, score) }
-    })
+        return { word: w, score: Math.max(1, score) }
+      })
 
     scored.sort((a, b) => b.score - a.score)
 
     // Weighted random selection from top candidates
     const pool = scored.slice(0, Math.min(20, scored.length))
-    return selectWeighted(pool, PAIR_COUNT)
+    return selectWeighted(pool, count)
   }
 
   function selectWeighted(pool, count) {
@@ -115,7 +117,6 @@ export const useGameStore = defineStore('game', () => {
     roundCount.value++
     sessionHistory.value = []
     matchResult.value = null
-    pendingRefresh.value = 0
 
     // Build left cards (English)
     const picked = words.slice(0, PAIR_COUNT)
@@ -179,75 +180,39 @@ export const useGameStore = defineStore('game', () => {
     if (matchResult.value !== 'correct') return
     const leftSlot = selectedLeft.value.slot
     const rightSlot = selectedRight.value.slot
+    const matchedWordId = selectedLeft.value.wordId
 
-    leftCards.value[leftSlot] = { ...leftCards.value[leftSlot], text: '', wordId: null, cleared: true }
-    rightCards.value[rightSlot] = { ...rightCards.value[rightSlot], text: '', wordId: null, cleared: true }
-
-    pendingRefresh.value++
+    replenishMatchedPair(leftSlot, rightSlot, matchedWordId)
     resetSelection()
-
-    if (pendingRefresh.value >= 2) {
-      batchRefresh()
-    }
   }
 
-  function batchRefresh() {
-    const wordsStore = useWordsStore()
-    const allWords = wordsStore.words
-
-    // Active wordIds still on the board (non-cleared left cards)
+  function replenishMatchedPair(leftSlot, rightSlot, matchedWordId) {
     const activeIds = leftCards.value
-      .filter(c => !c.cleared && c.wordId)
-      .map(c => c.wordId)
+      .filter(card => card.wordId && card.slot !== leftSlot)
+      .map(card => card.wordId)
 
-    const clearedCount = leftCards.value.filter(c => c.cleared).length
+    const [nextWord] = getCandidateWords(1, [...activeIds, matchedWordId])
 
-    // Pick new words
-    const available = allWords.filter(w => !activeIds.includes(w.id))
-    const shuffledAvail = shuffle(available)
-    const newWords = shuffledAvail.slice(0, clearedCount)
-
-    // Fill cleared left slots with new English words
-    let ni = 0
-    for (let i = 0; i < leftCards.value.length; i++) {
-      if (leftCards.value[i].cleared && ni < newWords.length) {
-        const w = newWords[ni]
-        ni++
-        leftCards.value[i] = {
-          id: `l-${i}-${Date.now()}`,
-          text: w.word,
-          wordId: w.id,
-          slot: i
-        }
-        lastRoundUsage.value[w.id] = roundCount.value
-        activeIds.push(w.id)
-      }
+    if (!nextWord) {
+      leftCards.value[leftSlot] = { ...leftCards.value[leftSlot], text: '', wordId: null, cleared: true }
+      rightCards.value[rightSlot] = { ...rightCards.value[rightSlot], text: '', wordId: null, cleared: true }
+      return
     }
 
-    // Rebuild right column: collect all active wordIds, shuffle, redistribute
-    const allRightCards = activeIds.map(id => {
-      const w = wordsStore.getWordById(id)
-      return {
-        id: `r-${Date.now()}-${Math.random()}`,
-        text: w?.meanings[0]?.meaning || '',
-        wordId: id,
-        slot: -1
-      }
-    })
-
-    const shuffledRight = shuffle(allRightCards)
-
-    // Assign shuffled cards to all right slots
-    for (let i = 0; i < rightCards.value.length; i++) {
-      if (i < shuffledRight.length) {
-        rightCards.value[i] = { ...shuffledRight[i], slot: i }
-      } else {
-        // Fewer active words than slots — leave empty
-        rightCards.value[i] = { ...rightCards.value[i], text: '', wordId: null, cleared: true }
-      }
+    leftCards.value[leftSlot] = {
+      id: `l-${leftSlot}-${Date.now()}`,
+      text: nextWord.word,
+      wordId: nextWord.id,
+      slot: leftSlot
+    }
+    rightCards.value[rightSlot] = {
+      id: `r-${rightSlot}-${Date.now()}`,
+      text: nextWord.meanings[0]?.meaning || nextWord.word,
+      wordId: nextWord.id,
+      slot: rightSlot
     }
 
-    pendingRefresh.value = 0
+    lastRoundUsage.value[nextWord.id] = roundCount.value
   }
 
   function endSession() {
@@ -274,14 +239,12 @@ export const useGameStore = defineStore('game', () => {
     matchResult,
     sessionHistory,
     roundCount,
-    pendingRefresh,
     allCleared,
     startSession,
     selectLeft,
     selectRight,
     resetSelection,
     clearMatchedPair,
-    batchRefresh,
     endSession
   }
 })
